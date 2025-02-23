@@ -1,26 +1,25 @@
-<template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
-</template>
+<script setup>
+import { ref, onMounted } from "vue";
+import { getWelcomeMessage } from "./services/api";
 
-<script>
-import HelloWorld from './components/HelloWorld.vue'
+const message = ref("Loading...");
 
-export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
+onMounted(async () => {
+  const data = await getWelcomeMessage();
+  message.value = data.message;
+});
 </script>
 
+<template>
+  <div class="container">
+    <h1>PeakPOS</h1>
+    <p>{{ message }}</p>
+  </div>
+</template>
+
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.container {
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  margin-top: 50px;
 }
 </style>
