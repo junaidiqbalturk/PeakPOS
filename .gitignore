@@ -1,0 +1,13 @@
+# Python & Flask
+venv/
+__pycache__/
+*.pyc
+instance/
+
+# Vue.js
+node_modules/
+dist/
+*.env
+
+# General
+.DS_Store
