@@ -1,11 +1,10 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models.user import User
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import datetime
 
 auth_bp = Blueprint("auth", __name__)
-
 
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
@@ -23,7 +22,6 @@ def signup():
 
     return jsonify({"message": "User registered successfully"}), 201
 
-
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
@@ -34,3 +32,9 @@ def login():
         return jsonify({"token": access_token}), 200
 
     return jsonify({"error": "Invalid credentials"}), 401
+
+@auth_bp.route("/user/me", methods=["GET"])
+@jwt_required()
+def get_user():
+    user_id = get_jwt_identity()
+    return jsonify({"username": "TestUser", "email": "test@example.com"}), 200
