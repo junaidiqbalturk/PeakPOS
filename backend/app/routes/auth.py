@@ -16,7 +16,7 @@ def signup():
     if User.query.filter_by(email=data["email"]).first():
         return jsonify({"error": "Email already exists"}), 400
 
-    user = User(username=data["username"], email=data["email"])
+    user = User(username=data["username"], email=data["email"], role=data.get("role", "cashier"))
     user.set_password(data["password"])
     db.session.add(user)
     db.session.commit()
@@ -30,8 +30,9 @@ def login():
     user = User.query.filter_by(email=data["email"]).first()
 
     if user and user.check_password(data["password"]):
-        access_token = create_access_token(identity=str(user.id), expires_delta=datetime.timedelta(days=1))
-        return jsonify({"token": access_token}), 200
+        print(f"User Role: {user.role}")
+        access_token = create_access_token(identity={"id": user.id, "role": user.role})
+        return jsonify({"token": access_token, "role": user.role}), 200
 
     return jsonify({"error": "Invalid credentials"}), 401
 

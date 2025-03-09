@@ -27,6 +27,7 @@ export const loginUser = async (email, password) => {
   try {
     const response = await api.post("/auth/login", { email, password });
     localStorage.setItem("token", response.data.token); // Save JWT
+    localStorage.setItem("role", response.data.role);   // Store role
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : "Login failed";
