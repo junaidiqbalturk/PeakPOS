@@ -97,6 +97,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { getUserInfo } from "../services/api"; // Import API function
+import { useRouter } from "vue-router";
 
 const user = ref(null);
 
@@ -109,6 +110,15 @@ const fetchUserData = async () => {
 };
 
 onMounted(fetchUserData);
+
+
+
+const router = useRouter();
+
+const logout = () => {
+  localStorage.removeItem("token"); // Clear stored JWT token
+  router.push("/"); // Redirect to login page
+};
 </script>
 
 
