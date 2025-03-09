@@ -6,6 +6,7 @@ import datetime
 
 auth_bp = Blueprint("auth", __name__)
 
+
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json()
@@ -22,19 +23,31 @@ def signup():
 
     return jsonify({"message": "User registered successfully"}), 201
 
+
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
     user = User.query.filter_by(email=data["email"]).first()
 
     if user and user.check_password(data["password"]):
-        access_token = create_access_token(identity=user.id, expires_delta=datetime.timedelta(days=1))
+        access_token = create_access_token(identity=str(user.id), expires_delta=datetime.timedelta(days=1))
         return jsonify({"token": access_token}), 200
 
     return jsonify({"error": "Invalid credentials"}), 401
 
-@auth_bp.route("/user/me", methods=["GET"])
-@jwt_required()
+
+from flask import jsonify, request
+
+
+@auth_bp.route("/user/me", methods=["GET", "OPTIONS"])
 def get_user():
-    user_id = get_jwt_identity()
-    return jsonify({"username": "TestUser", "email": "test@example.com"}), 200
+    if request.method == "OPTIONS":
+        return jsonify({"message": "CORS preflight successful"}), 200
+
+    from flask_jwt_extended import jwt_required, get_jwt_identity
+    @jwt_required()
+    def protected_route():
+        user_id = get_jwt_identity()
+        return jsonify({"username": "TestUser", "email": "test@example.com"}), 200
+
+    return protected_route()

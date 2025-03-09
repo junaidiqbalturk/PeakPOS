@@ -5,7 +5,11 @@ const API_URL = "http://127.0.0.1:5000/api"; // Flask backend URL
 // Create Axios Instance
 const api = axios.create({
   baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
+
 
 // Automatically Attach JWT Token to Requests
 api.interceptors.request.use((config) => {
@@ -43,7 +47,7 @@ export const signupUser = async (username, email, password) => {
 // Get User Info (Protected Route)
 export const getUserInfo = async () => {
   try {
-    const response = await api.get("/user/me");
+    const response = await api.get("/auth/user/me");
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : "Failed to fetch user data";
