@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models.user import User
+from flask_cors import cross_origin
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import datetime
 
@@ -31,7 +32,7 @@ def login():
 
     if user and user.check_password(data["password"]):
         print(f"User Role: {user.role}")
-        access_token = create_access_token(identity={"id": user.id, "role": user.role})
+        access_token = create_access_token(identity=str(user.id))
         return jsonify({"token": access_token, "role": user.role}), 200
 
     return jsonify({"error": "Invalid credentials"}), 401
@@ -49,6 +50,7 @@ def get_user():
     @jwt_required()
     def protected_route():
         user_id = get_jwt_identity()
+        print("JWT Identity:", user_id)
         return jsonify({"username": "TestUser", "email": "test@example.com"}), 200
 
     return protected_route()

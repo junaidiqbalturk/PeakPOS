@@ -19,8 +19,12 @@ def create_app():
     CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
     # Import and register blueprints (FIXED IMPORT PATH)
+    # Import and register blueprints
     from app.routes.auth import auth_bp
+    from app.routes.product import product_bp  # Import product routes
+
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(product_bp, url_prefix="/api")  # Register products API
 
     # Test route
     @app.route("/api/hello", methods=["GET"])
