@@ -35,3 +35,38 @@ def get_categories():
         return jsonify([])  # Return an empty list if no categories exist
 
     return jsonify([category.to_dict() for category in categories]), 200
+
+
+@category_bp.route("/categories/<int:category_id>", methods=["PUT"])
+def update_category(category_id):
+    category = Category.query.get(category_id)
+
+    if not category:
+        return jsonify({"error": "Category not found"}), 404
+
+    data = request.get_json()
+
+    if "name" in data:
+        # Check if category name already exists
+        existing_category = Category.query.filter_by(name=data["name"]).first()
+        if existing_category and existing_category.id != category_id:
+            return jsonify({"error": "Category name already exists"}), 400
+
+        category.name = data["name"]
+
+    db.session.commit()
+
+    return jsonify({"message": "Category updated successfully", "category": category.to_dict()}), 200
+
+
+@category_bp.route("/categories/<int:category_id>", methods=["DELETE"])
+def delete_category(category_id):
+    category = Category.query.get(category_id)
+
+    if not category:
+        return jsonify({"error": "Category not found"}), 404
+
+    db.session.delete(category)
+    db.session.commit()
+
+    return jsonify({"message": "Category deleted successfully"}), 200
