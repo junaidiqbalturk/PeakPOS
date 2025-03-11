@@ -22,3 +22,52 @@ def get_products():
     if not products:
         return jsonify([])  #Return an empty JSON list instead of None
     return jsonify([product.to_dict() for product in products])
+
+
+@product_bp.route("/products/<int:product_id>", methods=["GET"])
+def get_product(product_id):
+    product = Product.query.get(product_id)
+
+    if not product:
+        return jsonify({"error": "Product not found"}), 404
+
+    return jsonify(product.to_dict()), 200
+
+
+@product_bp.route("/products/<int:product_id>", methods=["PUT"])
+def update_product(product_id):
+    product = Product.query.get(product_id)
+
+    if not product:
+        return jsonify({"error": "Product not found"}), 404
+
+    data = request.get_json()
+
+    # Update product fields if provided
+    if "name" in data:
+        product.name = data["name"]
+    if "price" in data:
+        product.price = float(data["price"])
+    if "stock" in data:
+        product.stock = int(data["stock"])
+    if "category" in data:
+        product.category = data["category"]
+    if "image_url" in data:
+        product.image_url = data["image_url"]
+
+    db.session.commit()
+
+    return jsonify({"message": "Product updated successfully", "product": product.to_dict()}), 200
+
+
+@product_bp.route("/products/<int:product_id>", methods=["DELETE"])
+def delete_product(product_id):
+    product = Product.query.get(product_id)
+
+    if not product:
+        return jsonify({"error": "Product not found"}), 404
+
+    db.session.delete(product)
+    db.session.commit()
+
+    return jsonify({"message": "Product deleted successfully"}), 200
