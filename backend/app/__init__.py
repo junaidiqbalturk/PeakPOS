@@ -22,9 +22,11 @@ def create_app():
     # Import and register blueprints
     from app.routes.auth import auth_bp
     from app.routes.product import product_bp  # Import product routes
+    from app.routes.category import category_bp  # Register Category API
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(product_bp, url_prefix="/api")  # Register products API
+    app.register_blueprint(category_bp, url_prefix="/api")  # Register Categories API
 
     # Test route
     @app.route("/api/hello", methods=["GET"])
