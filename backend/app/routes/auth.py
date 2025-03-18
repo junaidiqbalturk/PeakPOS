@@ -30,7 +30,7 @@ def login():
     data = request.get_json()
     user = User.query.filter_by(email=data["email"]).first()
 
-    if user and user.check_password(data["password"]):
+    if user and user.check_password(data["password"]):  # FIXED!
         print(f"User Role: {user.role}")
         access_token = create_access_token(identity=str(user.id))
         return jsonify({"token": access_token, "role": user.role}), 200
