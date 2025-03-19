@@ -8,7 +8,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 order_bp = Blueprint("order", __name__)
 
 
-# ✅ 1. Create New Order
+#  Create New Order
 @order_bp.route("/orders", methods=["POST"])
 @jwt_required()
 def create_order():
@@ -126,3 +126,44 @@ def delete_order(order_id):
 
     return jsonify({"message": "Order deleted successfully"}), 200
 
+
+@order_bp.route("/orders/<int:order_id>", methods=["PUT"])
+@jwt_required()
+def update_order(order_id):
+    """Update an existing order (only if it belongs to the user)"""
+    user_id = get_jwt_identity()  # Get user ID from JWT
+    data = request.get_json()
+
+    # Fetch the order, ensuring it belongs to the logged-in user
+    order = Order.query.filter_by(id=order_id, user_id=user_id).first()
+
+    if not order:
+        return jsonify({"error": "Order not found or unauthorized"}), 404
+
+    # Initialize new total price
+    new_total_price = 0
+
+    # Update order items if provided
+    if "items" in data:
+        for item_data in data["items"]:
+            item = next((i for i in order.order_items if i.product_id == item_data["product_id"]), None)
+
+            if item:
+                # Fetch the product price from the Product table
+                product = Product.query.get(item.product_id)
+                if not product:
+                    return jsonify({"error": f"Product ID {item_data['product_id']} not found"}), 400
+
+                # Update the quantity and recalculate the price correctly
+                item.quantity = item_data["quantity"]
+                item.price_at_purchase = item.quantity * product.price  # Corrected calculation
+                new_total_price += item.price_at_purchase
+            else:
+                return jsonify({"error": f"Product ID {item_data['product_id']} not found in order"}), 400
+
+    # Update order total price
+    order.total_price = new_total_price
+
+    db.session.commit()
+
+    return jsonify({"message": "Order updated successfully"}), 200
