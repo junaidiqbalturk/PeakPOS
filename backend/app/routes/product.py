@@ -1,6 +1,10 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models.product import Product
+from flask_jwt_extended import jwt_required
+
+from app.models.order import OrderItem  # Correct import
+
 
 product_bp = Blueprint("product", __name__)
 
@@ -71,3 +75,21 @@ def delete_product(product_id):
     db.session.commit()
 
     return jsonify({"message": "Product deleted successfully"}), 200
+
+
+@product_bp.route("/products/sales", methods=["GET"])
+@jwt_required()
+def get_product_sales():
+    products = Product.query.all()
+    sales_data = []
+
+    for product in products:
+        total_sold = db.session.query(db.func.sum(OrderItem.quantity)).filter(
+            OrderItem.product_id == product.id).scalar() or 0
+        sales_data.append({
+            "product_id": product.id,
+            "name": product.name,
+            "total_sold": total_sold
+        })
+
+    return jsonify(sales_data)
