@@ -167,3 +167,82 @@ def update_order(order_id):
     db.session.commit()
 
     return jsonify({"message": "Order updated successfully"}), 200
+
+
+# Get Admin View for All Orders
+@order_bp.route("/admin/orders", methods=["GET"])
+@jwt_required()
+def get_all_orders():
+    """Fetch all orders (Admin-only)"""
+    user_id = get_jwt_identity()  # Get user ID from JWT
+
+    # Fetch user role
+    user = User.query.get(user_id)
+    if not user or user.role != "admin":
+        return jsonify({"error": "Unauthorized, admin access only"}), 403
+
+    # Fetch all orders
+    orders = Order.query.options(db.joinedload(Order.order_items)).all()
+
+    order_list = []
+    for order in orders:
+        order_data = {
+            "order_id": order.id,
+            "user_id": order.user_id,
+            "total_price": order.total_price,
+            "user_name": User.query.get(order.user_id).username,  # Fetch user name
+            "created_at": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "items": []
+        }
+
+        for item in order.order_items:
+            order_data["items"].append({
+                "product_id": item.product_id,
+                "quantity": item.quantity,
+                "price_at_purchase": item.price_at_purchase
+            })
+
+        order_list.append(order_data)
+
+    return jsonify(order_list), 200
+
+
+# Get Orders by User ID (Admin-only)" API
+@order_bp.route("/admin/orders/<int:user_id>", methods=["GET"])
+@jwt_required()
+def get_orders_by_user(user_id):
+    """Fetch all orders for a specific user (Admin-only)"""
+    admin_id = get_jwt_identity()  # Get admin's ID from JWT
+
+    # Fetch admin user
+    admin_user = User.query.get(admin_id)
+    if not admin_user or admin_user.role != "admin":
+        return jsonify({"error": "Unauthorized, admin access only"}), 403
+
+    # Fetch orders for the given user ID
+    orders = Order.query.filter_by(user_id=user_id).all()
+
+    if not orders:
+        return jsonify({"message": "No orders found for this user"}), 404
+
+    order_list = []
+    for order in orders:
+        order_data = {
+            "order_id": order.id,
+            "user_id": order.user_id,
+            "username": User.query.get(order.user_id).username,  # Fetch username
+            "total_price": order.total_price,
+            "created_at": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "items": []
+        }
+
+        for item in order.order_items:
+            order_data["items"].append({
+                "product_id": item.product_id,
+                "quantity": item.quantity,
+                "price_at_purchase": item.price_at_purchase
+            })
+
+        order_list.append(order_data)
+
+    return jsonify(order_list), 200
