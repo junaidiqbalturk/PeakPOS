@@ -46,7 +46,7 @@ def create_order():
     return jsonify({"message": "Order created successfully", "order_id": new_order.id}), 201
 
 
-# Get All Orders
+# Get All Orders for specific User
 @order_bp.route("/orders", methods=["GET"])
 @jwt_required()  # Ensure user is authenticated
 def get_orders():
@@ -79,19 +79,32 @@ def get_orders():
 # Get Order by ID
 @order_bp.route("/orders/<int:order_id>", methods=["GET"])
 @jwt_required()
-def get_order(order_id):
-    order = Order.query.get(order_id)
+def get_order_by_id(order_id):
+    """Fetch details of a specific order"""
+    user_id = get_jwt_identity()  # Get user ID from JWT
+
+    # Fetch the order, ensuring it belongs to the logged-in user
+    order = Order.query.options(db.joinedload(Order.order_items)).filter_by(id=order_id, user_id=user_id).first()
+
     if not order:
         return jsonify({"error": "Order not found"}), 404
 
-    return jsonify({
-        "id": order.id,
-        "user_id": order.user_id,
+    # Build response
+    order_data = {
+        "order_id": order.id,
         "total_price": order.total_price,
-        "created_at": order.created_at,
-        "items": [{"product_id": item.product_id, "quantity": item.quantity, "price": item.price_at_purchase} for item
-                  in order.order_items]
-    })
+        "created_at": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        "items": []
+    }
+
+    for item in order.order_items:
+        order_data["items"].append({
+            "product_id": item.product_id,
+            "quantity": item.quantity,
+            "price": item.price_at_purchase
+        })
+
+    return jsonify(order_data), 200
 
 
 # ✅ 4. Delete Order
