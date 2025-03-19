@@ -107,14 +107,22 @@ def get_order_by_id(order_id):
     return jsonify(order_data), 200
 
 
-# ✅ 4. Delete Order
+# Delete Order
 @order_bp.route("/orders/<int:order_id>", methods=["DELETE"])
 @jwt_required()
 def delete_order(order_id):
-    order = Order.query.get(order_id)
-    if not order:
-        return jsonify({"error": "Order not found"}), 404
+    """Cancel an order (only if it belongs to the user)"""
+    user_id = get_jwt_identity()  # Get user ID from JWT
 
+    # Fetch the order, ensuring it belongs to the logged-in user
+    order = Order.query.filter_by(id=order_id, user_id=user_id).first()
+
+    if not order:
+        return jsonify({"error": "Order not found or unauthorized"}), 404
+
+    # Delete the order and associated items
     db.session.delete(order)
     db.session.commit()
+
     return jsonify({"message": "Order deleted successfully"}), 200
+
