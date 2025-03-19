@@ -9,7 +9,7 @@ product_bp = Blueprint("product", __name__)
 @product_bp.route("/products", methods=["POST"])
 def add_product():
     data = request.get_json()
-    product = Product(name=data["name"], price=data["price"], stock=data["stock"])
+    product = Product(name=data["name"], price=data["price"], stock=data["stock"], category_id=data["category_id"], )
     db.session.add(product)
     db.session.commit()
     return jsonify({"message": "Product added successfully"}), 201

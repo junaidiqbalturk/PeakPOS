@@ -13,5 +13,5 @@ with app.app_context():
         print(f"❌ Connection Failed: {e}")
 from werkzeug.security import generate_password_hash
 
-hashed_password = generate_password_hash("greamesmith").encode('utf-8')
+hashed_password = generate_password_hash("greamesmith")
 print("Hashed Password:", hashed_password)

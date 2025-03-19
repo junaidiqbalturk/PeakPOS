@@ -10,7 +10,7 @@ class User(db.Model):
     role = db.Column(db.String(20), default="cashier")  # Default role is "cashier"
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password).decode('utf-8')
+        self.password_hash = generate_password_hash(password) #.decode('utf-8')
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
