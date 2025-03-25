@@ -3,14 +3,34 @@ from app import db
 from app.models.restocking import Restocking
 from app.models.product import Product
 from app.models.supplier import Supplier
-from flask_jwt_extended import jwt_required
+from app.models.user import User
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 restocking_bp = Blueprint("restocking", __name__)
+
+
+# Modify Restocking Endpoints to Check Admin Role and wrap all endpoint with @admin check,
+
+def admin_required(fn):
+    """Decorator to restrict access to Admin users only."""
+
+    @jwt_required()
+    def wrapper(*args, **kwargs):
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+
+        if not user or user.role != "admin":
+            return jsonify({"error": "Admin access required"}), 403  # Forbidden
+
+        return fn(*args, **kwargs)
+
+    return wrapper
 
 
 # Create a Restocking Request
 @restocking_bp.route("/restocking", methods=["POST"])
 @jwt_required()
+@admin_required  # Apply Admin restriction here
 def request_restocking():
     """Create a restocking request for a product"""
     data = request.get_json()
@@ -40,6 +60,7 @@ def request_restocking():
 # Get All Restocking Requests
 @restocking_bp.route("/restocking", methods=["GET"])
 @jwt_required()
+@admin_required  # Apply Admin restriction here
 def get_restocking_requests():
     """Fetch all restocking requests"""
     restocks = Restocking.query.all()
@@ -49,6 +70,7 @@ def get_restocking_requests():
 # Approve or Reject a Restocking Request
 @restocking_bp.route("/restocking/<int:id>", methods=["PUT"])
 @jwt_required()
+@admin_required  # Apply Admin restriction here
 def update_restocking_status(id):
     """Update the status of a restocking request"""
     restock = Restocking.query.get(id)
@@ -72,6 +94,7 @@ def update_restocking_status(id):
 # Delete a Restocking Request
 @restocking_bp.route("/restocking/<int:id>", methods=["DELETE"])
 @jwt_required()
+@admin_required  # Apply Admin restriction here
 def delete_restocking_request(id):
     """Delete a restocking request"""
     restock = Restocking.query.get(id)
