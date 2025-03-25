@@ -28,6 +28,7 @@ def create_app():
     from app.routes.order import order_bp  # Register Order Route
     from app.routes.supplier import supplier_bp # Supplier Order API
     from app.routes.product_supplier import product_supplier_bp # product_supplier API endpoint
+    from app.routes.restocking import restocking_bp  # Import Restocking API
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(product_bp, url_prefix="/api")  # Register products API
@@ -35,6 +36,7 @@ def create_app():
     app.register_blueprint(order_bp, url_prefix="/api")  # Register Order API
     app.register_blueprint(supplier_bp, url_prefix="/api")  # Supplier API
     app.register_blueprint(product_supplier_bp, url_prefix="/api") # product_supplier API
+    app.register_blueprint(restocking_bp, url_prefix="/api")  # Register API
     from app.models import User, Product, Category, Order, OrderItem, supplier
 
     # Test route
