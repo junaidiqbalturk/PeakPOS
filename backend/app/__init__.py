@@ -27,12 +27,14 @@ def create_app():
     from app.routes.category import category_bp  # Register Category API
     from app.routes.order import order_bp  # Register Order Route
     from app.routes.supplier import supplier_bp # Supplier Order API
+    from app.routes.product_supplier import product_supplier_bp # product_supplier API endpoint
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(product_bp, url_prefix="/api")  # Register products API
     app.register_blueprint(category_bp, url_prefix="/api")  # Register Categories API
     app.register_blueprint(order_bp, url_prefix="/api")  # Register Order API
     app.register_blueprint(supplier_bp, url_prefix="/api")  # Supplier API
+    app.register_blueprint(product_supplier_bp, url_prefix="/api") # product_supplier API
     from app.models import User, Product, Category, Order, OrderItem, supplier
 
     # Test route

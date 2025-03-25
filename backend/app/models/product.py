@@ -14,7 +14,9 @@ class Product(db.Model):
     )
     image_url = db.Column(db.String(255), nullable=True)
 
+    # Relationship
     category = db.relationship("Category", back_populates="products")
+    supplier_associations = db.relationship("ProductSupplier", back_populates="product", cascade="all, delete-orphan")
 
     def to_dict(self):
         return {
@@ -24,5 +26,6 @@ class Product(db.Model):
             "stock": self.stock,
             "category_id": self.category_id,
             "category_name": self.category.name if self.category else None,
-            "image_url": self.image_url
+            "image_url": self.image_url,
+            "suppliers": [assoc.to_dict() for assoc in self.supplier_associations]  # Include supplier details
         }

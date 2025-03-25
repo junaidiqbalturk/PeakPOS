@@ -10,6 +10,9 @@ class Supplier(db.Model):
     address = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Relationship: One supplier can provide multiple products
+    product_associations = db.relationship("ProductSupplier", back_populates="supplier", cascade="all, delete-orphan")
+
     def to_dict(self):
         """Convert supplier object to dictionary format."""
         return {
@@ -18,5 +21,7 @@ class Supplier(db.Model):
             "contact": self.contact,
             "email": self.email,
             "address": self.address,
-            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S")
+            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            # Include products in response (Optional)
+            "products": [product.to_dict() for product in self.products]
         }

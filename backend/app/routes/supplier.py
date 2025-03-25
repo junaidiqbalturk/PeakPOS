@@ -16,6 +16,10 @@ def add_supplier():
     if not data.get("name") or not data.get("contact") or not data.get("email") or not data.get("address"):
         return jsonify({"error": "Missing required fields"}), 400
 
+        # Check if supplier already exists
+    if Supplier.query.filter_by(email=data["email"]).first():
+        return jsonify({"error": "Supplier with this email already exists"}), 400
+
     new_supplier = Supplier(
         name=data["name"],
         contact=data["contact"],
