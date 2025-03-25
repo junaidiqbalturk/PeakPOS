@@ -6,6 +6,7 @@ from config import Config
 from flask_migrate import Migrate
 
 
+
 db = SQLAlchemy()
 jwt = JWTManager()
 
@@ -24,14 +25,15 @@ def create_app():
     from app.routes.auth import auth_bp
     from app.routes.product import product_bp  # Import product routes
     from app.routes.category import category_bp  # Register Category API
-    from app.routes.order import order_bp  #Register Order Route
+    from app.routes.order import order_bp  # Register Order Route
+    from app.routes.supplier import supplier_bp # Supplier Order API
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(product_bp, url_prefix="/api")  # Register products API
     app.register_blueprint(category_bp, url_prefix="/api")  # Register Categories API
-    app.register_blueprint(order_bp, url_prefix="/api")  #Register Order API
-
-    from app.models import User, Product, Category, Order, OrderItem
+    app.register_blueprint(order_bp, url_prefix="/api")  # Register Order API
+    app.register_blueprint(supplier_bp, url_prefix="/api")  # Supplier API
+    from app.models import User, Product, Category, Order, OrderItem, supplier
 
     # Test route
     @app.route("/api/hello", methods=["GET"])
