@@ -69,3 +69,10 @@ def clear_cart():
     db.session.commit()  # ✅ Commit the log to DB
 
     return jsonify({"message": "Cart cleared", "cart": cleared_cart}), 200
+
+
+# Get Cart Endpoint
+@cart_bp.route("/cart", methods=["GET"])
+@jwt_required()
+def get_cart():
+    return jsonify({"cart": Cart.get_cart()}), 200
