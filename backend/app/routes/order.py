@@ -4,6 +4,7 @@ from app.models.order import Order, OrderItem
 from app.models.user import User
 from app.models.product import Product
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.models.activity_log import log_activity  # Import log function
 
 order_bp = Blueprint("order", __name__)
 
@@ -43,6 +44,9 @@ def create_order():
         db.session.add(item)
 
     db.session.commit()
+    # Log the order creation
+    log_entry=log_activity(user_id, "Created Order", f"Order ID {new_order.id}, Total: ${total_price}")
+    db.session.add(log_entry)
     return jsonify({"message": "Order created successfully", "order_id": new_order.id}), 201
 
 

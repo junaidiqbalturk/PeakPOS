@@ -1,3 +1,5 @@
+from idlelib.configdialog import changes
+
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models.product import Product
@@ -5,6 +7,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.order import OrderItem  # Correct import
 from app.models.order import Order, OrderItem
 from app.models.user import User
+from app.models.activity_log import log_activity  # Import log function
 
 product_bp = Blueprint("product", __name__)
 
@@ -72,6 +75,8 @@ def update_product(product_id):
         product.image_url = data["image_url"]
 
     db.session.commit()
+    # Log the product update
+    log_activity(user_id, "Updated Product", ", ".join(changes))
     return jsonify({"message": "Product updated successfully", "product": product.to_dict()}), 200
 
 

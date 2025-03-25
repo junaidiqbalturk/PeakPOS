@@ -3,9 +3,11 @@ from app import db
 from app.models.restocking import Restocking
 from app.models.product import Product
 from app.models.supplier import Supplier
+from app.models.order import Order, OrderItem
 from app.models.user import User
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from functools import wraps
+from app.models.activity_log import log_activity  # Import log function
 
 restocking_bp = Blueprint("restocking", __name__)
 
@@ -90,6 +92,8 @@ def update_restocking_status(id):
             product.stock += restock.quantity
 
     db.session.commit()
+    # Log the order creation
+    log_activity(user_id, "Created Order", f"Order ID {new_order.id}, Total: ${total_price}")
     return jsonify({"message": "Restocking request updated", "data": restock.to_dict()}), 200
 
 
