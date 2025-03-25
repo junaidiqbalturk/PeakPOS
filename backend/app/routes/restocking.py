@@ -5,6 +5,7 @@ from app.models.product import Product
 from app.models.supplier import Supplier
 from app.models.user import User
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from functools import wraps
 
 restocking_bp = Blueprint("restocking", __name__)
 
@@ -14,6 +15,7 @@ restocking_bp = Blueprint("restocking", __name__)
 def admin_required(fn):
     """Decorator to restrict access to Admin users only."""
 
+    @wraps(fn)  # Preserve original function name
     @jwt_required()
     def wrapper(*args, **kwargs):
         user_id = get_jwt_identity()
@@ -24,7 +26,7 @@ def admin_required(fn):
 
         return fn(*args, **kwargs)
 
-    return wrapper
+    return wrapper  # Return the wrapped function
 
 
 # Create a Restocking Request
