@@ -4,6 +4,7 @@ from app.models.returns import Return
 from app.models.order import Order, OrderItem
 from app.models.product import Product
 from app.models.user import User  # Import User model
+from app.models.refund import Refund # Import Refund model
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 returns_bp = Blueprint("returns", __name__)
@@ -88,7 +89,6 @@ def get_returns():
     return jsonify(return_list), 200
 
 
-# 3️⃣ Approve or Reject a Return Request (Admin Only)
 @returns_bp.route("/returns/<int:return_id>", methods=["PUT"])
 @jwt_required()
 def process_return(return_id):
@@ -97,7 +97,7 @@ def process_return(return_id):
     user = User.query.get(user_id)
 
     if not user or user.role != "admin":
-        return jsonify({"error": "Unauthorized. Only admins can process returns."}), 403  # ⛔ Restrict access
+        return jsonify({"error": "Unauthorized. Only admins can process returns."}), 403
 
     return_request = Return.query.get(return_id)
     if not return_request:
@@ -111,11 +111,20 @@ def process_return(return_id):
 
     return_request.status = new_status
 
-    # ✅ If approved, update stock and process refund
+    # ✅ If approved, update stock and create refund entry
     if new_status == "Approved":
         product = Product.query.get(return_request.product_id)
         if product:
             product.stock += return_request.quantity  # ✅ Restock product
+
+        # ✅ Create refund entry
+        refund = Refund(
+            return_id=return_request.id,
+            user_id=return_request.user_id,
+            refund_amount=return_request.refund_amount,
+            status="Pending"  # ✅ Refund will be processed later
+        )
+        db.session.add(refund)
 
     db.session.commit()
     return jsonify({"message": f"Return request {new_status} successfully", "return": return_request.to_dict()}), 200
