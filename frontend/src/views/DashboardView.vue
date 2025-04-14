@@ -1,91 +1,118 @@
 <template>
   <v-app>
-    <!-- Left Sidebar -->
-    <v-navigation-drawer class="right-navbar" app right width="280" color="#f4f4f4" elevation="10">
-  <v-list>
-    <v-list-item>
-      <v-list-item-content>
-        <v-list-item-title class="text-h6 font-weight-bold">
-          User Profile
-        </v-list-item-title>
-      </v-list-item-content>
-    </v-list-item>
+    <!-- Sidebar Navigation -->
+    <v-navigation-drawer app permanent>
+      <v-list>
+        <v-list-item link>
+          <v-list-item-icon>
+            <v-icon>mdi-view-dashboard</v-icon>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <v-list-item-title>Dashboard</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item link to="/products">
+    <v-list-item-icon><v-icon>mdi-package-variant</v-icon></v-list-item-icon>
+    <v-list-item-title>Products</v-list-item-title>
+  </v-list-item>
 
-    <v-divider></v-divider>
+  <v-list-item link to="/categories">
+    <v-list-item-icon><v-icon>mdi-shape</v-icon></v-list-item-icon>
+    <v-list-item-title>Categories</v-list-item-title>
+  </v-list-item>
 
-    <v-list-item>
-      <v-list-item-icon>
-        <v-avatar size="50">
-          <v-img src="https://randomuser.me/api/portraits/men/45.jpg"></v-img>
-        </v-avatar>
-      </v-list-item-icon>
-      <v-list-item-content>
-        <v-list-item-title>{{ user ? user.email : "Loading..." }}</v-list-item-title>
-        <v-list-item-subtitle>Admin</v-list-item-subtitle>
-      </v-list-item-content>
-    </v-list-item>
+  <v-list-item link to="/orders">
+    <v-list-item-icon><v-icon>mdi-cart</v-icon></v-list-item-icon>
+    <v-list-item-title>Orders</v-list-item-title>
+  </v-list-item>
 
-    <v-divider></v-divider>
+  <v-list-item link to="/suppliers">
+    <v-list-item-icon><v-icon>mdi-truck</v-icon></v-list-item-icon>
+    <v-list-item-title>Suppliers</v-list-item-title>
+  </v-list-item>
 
-    <v-list-item link>
-      <v-icon left>mdi-account</v-icon>
-      <v-list-item-content>My Profile</v-list-item-content>
-    </v-list-item>
+  <v-list-item link to="/inventory">
+    <v-list-item-icon><v-icon>mdi-warehouse</v-icon></v-list-item-icon>
+    <v-list-item-title>Inventory</v-list-item-title>
+  </v-list-item>
 
-    <v-list-item link>
-      <v-icon left>mdi-cog</v-icon>
-      <v-list-item-content>Settings</v-list-item-content>
-    </v-list-item>
+  <v-list-item link to="/returns">
+    <v-list-item-icon><v-icon>mdi-backup-restore</v-icon></v-list-item-icon>
+    <v-list-item-title>Returns</v-list-item-title>
+  </v-list-item>
 
-    <v-list-item link @click="logout">
-      <v-icon left color="red">mdi-logout</v-icon>
-      <v-list-item-content class="text-red">Logout</v-list-item-content>
-    </v-list-item>
-  </v-list>
-</v-navigation-drawer>
+  <v-list-item link to="/reports">
+    <v-list-item-icon><v-icon>mdi-chart-box</v-icon></v-list-item-icon>
+    <v-list-item-title>Reports</v-list-item-title>
+  </v-list-item>
+        <v-divider class="my-2"></v-divider>
 
+  <v-list-item link to="/logout">
+    <v-list-item-icon><v-icon>mdi-logout</v-icon></v-list-item-icon>
+    <v-list-item-title>Logout</v-list-item-title>
+  </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
 
     <!-- Main Content -->
-    <v-main class="dashboard-background">
+    <v-main>
       <v-container fluid>
-        <v-row>
-          <!-- User Info -->
-          <v-col cols="12">
-            <h2 class="white--text">Welcome, {{ user ? user.email : "Loading..." }}</h2>
+        <!-- Cards Row -->
+        <v-row class="mt-4" dense>
+          <v-col v-for="(card, index) in cards" :key="index" cols="12" md="3">
+            <v-hover v-slot="{ isHovering, props }">
+              <v-card
+                class="pa-4 card-style"
+                elevation="12"
+                v-bind="props"
+                :style="{ background: isHovering ? card.hoverGradient : card.gradient }"
+              >
+                <v-icon size="36" class="mb-2" color="white">{{ card.icon }}</v-icon>
+                <div class="text-h5 font-weight-bold text-white">{{ card.value }}</div>
+                <div class="text-caption text-white">{{ card.title }}</div>
+              </v-card>
+            </v-hover>
+          </v-col>
+        </v-row>
+
+        <!-- Sales Overview & Recent Orders Side-by-Side -->
+        <v-row class="mt-6" dense>
+          <!-- Sales Overview -->
+          <v-col cols="12" md="6">
+            <v-card class="pa-4 h-100" elevation="10">
+              <v-card-title class="font-weight-bold">Sales Overview</v-card-title>
+              <v-card-text>
+                <v-skeleton-loader
+                  type="image"
+                  class="elevation-2 chart-placeholder"
+                ></v-skeleton-loader>
+              </v-card-text>
+            </v-card>
           </v-col>
 
-          <!-- Dashboard Cards -->
-          <v-hover>
-            <template v-slot:default="{ isHovering, props}">
-              <v-col cols="12" md="3">
-            <v-card  v-bind="props"
-              :color="isHovering ? 'primary' : undefined" class="pa-4 card-style" elevation="24" loading dark>
-              <v-icon class="card-icon" size="large" color="#ffb703">mdi-cash</v-icon>
-              <div class="text-h5 mt-2">$2,810.00</div>
-              <div>Total Revenue</div>
-            </v-card>
-          </v-col>
-            </template>
-          </v-hover>
-          <v-col cols="12" md="3">
-            <v-card class="pa-4 card-style" elevation="24" loading dark>
-              <v-icon class="card-icon" size="large" color="#ffb703" >mdi-cart</v-icon>
-              <div class="text-h5 mt-2">102</div>
-              <div>Total Orders</div>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-card class="pa-4 card-style" elevation="24" loading dark>
-              <v-icon class="card-icon" size="large" color="#ffb703">mdi-account-group</v-icon>
-              <div class="text-h5 mt-2">1,020</div>
-              <div>New Customers</div>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-card class="pa-4 card-style" elevation="24" loading dark>
-              <v-icon class="card-icon" size="large" color="#ffb703">mdi-eye</v-icon>
-              <div class="text-h5 mt-2">81,020</div>
-              <div>Visitors Today</div>
+          <!-- Recent Orders -->
+          <v-col cols="12" md="6">
+            <v-card class="pa-4 h-100" elevation="10">
+              <v-card-title class="font-weight-bold">Recent Orders</v-card-title>
+              <v-card-text>
+                <v-data-table
+                  :headers="orderHeaders"
+                  :items="recentOrders"
+                  class="elevation-1"
+                  dense
+                  hide-default-footer
+                >
+                  <template v-slot:[`item.status`]="{ item }">
+                    <v-chip
+                      :color="item.status === 'Completed' ? 'green' : 'orange'"
+                      dark
+                      small
+                    >
+                      {{ item.status }}
+                    </v-chip>
+                  </template>
+                </v-data-table>
+              </v-card-text>
             </v-card>
           </v-col>
         </v-row>
@@ -95,59 +122,67 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import { getUserInfo } from "../services/api"; // Import API function
-import { useRouter } from "vue-router";
+import { ref } from "vue";
 
-const user = ref(null);
+const cards = ref([
+  {
+    title: "Total Sales",
+    value: "$12,400",
+    icon: "mdi-cash-register",
+    gradient: "linear-gradient(to right, #00b09b, #96c93d)",
+    hoverGradient: "linear-gradient(to right, #96c93d, #00b09b)",
+  },
+  {
+    title: "Total Products",
+    value: "124",
+    icon: "mdi-package-variant",
+    gradient: "linear-gradient(to right, #2193b0, #6dd5ed)",
+    hoverGradient: "linear-gradient(to right, #6dd5ed, #2193b0)",
+  },
+  {
+    title: "Total Orders",
+    value: "342",
+    icon: "mdi-cart",
+    gradient: "linear-gradient(to right, #ee0979, #ff6a00)",
+    hoverGradient: "linear-gradient(to right, #ff6a00, #ee0979)",
+  },
+  {
+    title: "Total Revenue",
+    value: "$25,100",
+    icon: "mdi-currency-usd",
+    gradient: "linear-gradient(to right, #8e2de2, #4a00e0)",
+    hoverGradient: "linear-gradient(to right, #4a00e0, #8e2de2)",
+  },
+]);
 
-const fetchUserData = async () => {
-  try {
-    user.value = await getUserInfo();
-  } catch (error) {
-    console.error("Failed to fetch user data:", error);
-  }
-};
+const orderHeaders = [
+  { text: "Order ID", value: "id" },
+  { text: "Customer", value: "customer" },
+  { text: "Date", value: "date" },
+  { text: "Total", value: "total" },
+  { text: "Status", value: "status" },
+];
 
-onMounted(fetchUserData);
-
-
-
-const router = useRouter();
-
-const logout = () => {
-  localStorage.removeItem("token"); // Clear stored JWT token
-  router.push("/"); // Redirect to login page
-};
+const recentOrders = [
+  { id: 1001, customer: "Ali Khan", date: "2025-04-10", total: "$250.00", status: "Completed" },
+  { id: 1002, customer: "Sara Noor", date: "2025-04-09", total: "$180.00", status: "Pending" },
+  { id: 1003, customer: "Hamza Ahmed", date: "2025-04-08", total: "$99.00", status: "Completed" },
+];
 </script>
 
-
-<style>
+<style scoped>
 .card-style {
-  background: linear-gradient(135deg, #023047, #219ebc) !important;
-  color: white !important;
-  text-align: center;
-  border-radius: 15px;
-}
-.card-icon {
-  font-size: 50px;
-  margin-bottom: 10px;
+  border-radius: 12px;
+  transition: 0.3s ease;
+  cursor: pointer;
 }
 .card-style:hover {
-  transform: translateY(-5px); /* Lift effect */
-  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3); /* Hover shadow */
-  background: linear-gradient(to bottom right, #219ebc, #219ebc) !important; /* Slightly different hover gradient */
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
-.dashboard-background {
-  min-height: 100vh;
-  background: linear-gradient(45deg, #dad7cd, #a3b18a);
-/* Change for desired theme */
-  color: black;
-  padding: 20px;
-}
-.right-navbar {
-  background: linear-gradient(to bottom, #1e3c72, #2a5298) !important;
-  color: white !important;
-  padding: 10px;
+.chart-placeholder {
+  height: 250px;
+  border-radius: 12px;
+  background: linear-gradient(to right, #f4f4f4, #e0e0e0);
 }
 </style>
