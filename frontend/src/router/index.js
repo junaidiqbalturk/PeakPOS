@@ -29,6 +29,7 @@ const router = createRouter({
 // Route Guard for Authentication
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
+
   const role = localStorage.getItem("role");
   const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
 
