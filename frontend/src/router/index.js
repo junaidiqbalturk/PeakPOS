@@ -4,6 +4,7 @@ import SignupView from "../views/SignupView.vue";
 import DashboardView from "../views/DashboardView.vue";
 import AdminView from "../views/AdminView.vue";
 import ProductView from "@/views/ProductView.vue";
+import SalesView from "@/views/SalesView.vue";
 
 const routes = [
   { path: "/", component: LoginView },
@@ -19,6 +20,7 @@ const routes = [
     meta: { requiresAuth: true, requiresAdmin: true },
   },
   { path: "/products", component: ProductView, meta: { requiresAuth: true } },
+  { path: "/sales", component: SalesView, meta: { requiresAuth: true } },
 ];
 
 const router = createRouter({

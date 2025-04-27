@@ -45,8 +45,8 @@ def create_order():
 
     db.session.commit()
     # Log the order creation
-    log_entry=log_activity(user_id, "Created Order", f"Order ID {new_order.id}, Total: ${total_price}")
-    db.session.add(log_entry)
+    # log_entry=log_activity(user_id, "Created Order", f"Order ID {new_order.id}, Total: ${total_price}")
+    # db.session.add(log_entry)
     return jsonify({"message": "Order created successfully", "order_id": new_order.id}), 201
 
 
