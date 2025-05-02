@@ -132,13 +132,16 @@
               <span>Tax (7%)</span>
               <span>${{ calculateTax().toFixed(2) }}</span>
             </div>
-            <div class="summary-item discount">
-              <span>Discount</span>
-              <div class="discount-input">
-                <input type="number" v-model.number="discount" placeholder="0" min="0" max="100" />
-                <span>%</span>
-              </div>
-            </div>
+           <div class="summary-item discount">
+  <span>Discount</span>
+  <select v-model="selectedDiscountId">
+    <option value="">None</option>
+    <option v-for="discount in availableDiscounts" :key="discount.id" :value="discount.id">
+      {{ discount.name }} - {{ discount.value }}{{ discount.discount_type === 'percentage' ? '%' : '$' }}
+    </option>
+  </select>
+</div>
+
             <div class="summary-total">
               <span>Total</span>
               <span>${{ calculateTotal().toFixed(2) }}</span>
@@ -166,10 +169,13 @@ export default {
       cart: [],
       discount: 0,
       filteredProducts: [],
+      availableDiscounts: [],
+    selectedDiscountId: null,
     };
   },
   mounted() {
     this.loadProducts();
+    this.fetchDiscounts(); // fetch available discounts
   },
   methods: {
     async loadProducts() {
@@ -181,6 +187,14 @@ export default {
         console.error("Failed to load products:", error);
       }
     },
+    async fetchDiscounts() {
+    try {
+      const res = await axios.get("http://127.0.0.1:5000/api/discounts");
+      this.availableDiscounts = res.data;
+    } catch (err) {
+      console.error("Error fetching discounts", err);
+    }
+  },
     searchProducts() {
       if (!this.searchTerm) {
         this.filteredProducts = [...this.products];
@@ -239,35 +253,37 @@ async placeOrder() {
     return;
   }
 
-  const orderPayload = {
-    items: this.cart.map(item => ({
-      product_id: item.id,
-      quantity: item.quantity
-    }))
-  };
-
   try {
-    await axios.post(
-      "http://127.0.0.1:5000/api/orders",
-      orderPayload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       }
-    );
+    };
 
-    alert("✅ Order placed successfully!");
+    // Step 1: Add items to backend cart (optional if your backend expects items already added)
+    for (const item of this.cart) {
+      await axios.post("http://127.0.0.1:5000/api/cart/add", {
+        product_id: item.id,
+        quantity: item.quantity
+      }, config);
+    }
+
+    // Step 2: Call checkout endpoint with discount_id
+    const checkoutPayload = {
+      ...(this.selectedDiscountId && { discount_id: this.selectedDiscountId })
+    };
+
+    const res = await axios.post("http://127.0.0.1:5000/api/checkout", checkoutPayload, config);
+
+    alert(`✅ Order placed successfully! Order ID: ${res.data.order_id}`);
     this.cart = [];
-    this.discount = 0;
+    this.selectedDiscountId = null;
   } catch (error) {
     console.error("Failed to place order", error);
     alert("❌ Failed to place order.");
   }
 }
-
-
   },
 };
 </script>
