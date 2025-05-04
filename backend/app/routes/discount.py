@@ -31,7 +31,7 @@ def add_discount():
 
 # Get All Discounts
 @discount_bp.route("/discounts", methods=["GET"])
-@jwt_required()
+#@jwt_required()
 def get_discounts():
     discounts = Discount.query.all()
     return jsonify([discount.to_dict() for discount in discounts]), 200

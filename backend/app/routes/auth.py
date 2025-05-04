@@ -28,29 +28,77 @@ def signup():
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
+
+    # Check if email is provided
+    if not data or not data.get("email"):
+        return jsonify({"error": "Email is required"}), 400
+
+    # Check if password is provided
+    if not data.get("password"):
+        return jsonify({"error": "Password is required"}), 400
+
+    # Find user by email
     user = User.query.filter_by(email=data["email"]).first()
 
-    if user and user.check_password(data["password"]):  # FIXED!
-        print(f"User Role: {user.role}")
-        access_token = create_access_token(identity=str(user.id))
-        return jsonify({"token": access_token, "role": user.role}), 200
+    if user and user.check_password(data["password"]):
+        # Create JWT token with an expiration time (for enhanced security)
+        expires = datetime.timedelta(days=1)  # Token valid for 1 day
+        access_token = create_access_token(
+            identity=str(user.id),
+            expires_delta=expires
+        )
 
-    return jsonify({"error": "Invalid credentials"}), 401
+        # Log successful login
+        print(f"User {user.username} (ID: {user.id}, Role: {user.role}) logged in successfully")
 
+        # Return token and role
+        return jsonify({
+            "token": access_token,
+            "role": user.role,
+            "username": user.username
+        }), 200
 
-from flask import jsonify, request
+    # Invalid credentials
+    return jsonify({"error": "Invalid email or password"}), 401
 
 
 @auth_bp.route("/user/me", methods=["GET", "OPTIONS"])
 def get_user():
+    # Handle CORS preflight requests
     if request.method == "OPTIONS":
         return jsonify({"message": "CORS preflight successful"}), 200
 
-    from flask_jwt_extended import jwt_required, get_jwt_identity
+    # FIXED: Correctly apply jwt_required decorator
     @jwt_required()
-    def protected_route():
+    def protected_get_user():
+        # Get user ID from JWT identity
         user_id = get_jwt_identity()
-        print("JWT Identity:", user_id)
-        return jsonify({"username": "TestUser", "email": "test@example.com"}), 200
 
-    return protected_route()
+        # Find user by ID
+        user = User.query.get(user_id)
+
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Return user data (exclude sensitive information)
+        return jsonify({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role": user.role
+        }), 200
+
+    # Call the nested function
+    return protected_get_user()
+
+
+# ADDITIONAL: Add logout endpoint (JWT token should be invalidated on client-side)
+@auth_bp.route("/logout", methods=["POST"])
+@jwt_required()
+def logout():
+    # Client should remove the token from storage
+    # For enhanced security, you could implement a token blacklist
+    # This is a simple implementation
+    user_id = get_jwt_identity()
+    print(f"User {user_id} logged out")
+    return jsonify({"message": "Logged out successfully"}), 200
