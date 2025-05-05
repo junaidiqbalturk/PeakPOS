@@ -937,7 +937,7 @@ export default {
         localStorage.setItem('darkMode', this.isDarkMode.toString());
       }
     },
-    
+
 // Add the new periodLabel method
 periodLabel(period) {
   // Convert period to a properly formatted label

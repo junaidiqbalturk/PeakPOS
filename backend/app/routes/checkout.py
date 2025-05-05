@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.checkout import Checkout
 from app.models.discount import Discount
@@ -13,15 +13,17 @@ checkout_bp = Blueprint("checkout", __name__)
 @checkout_bp.route("/checkout", methods=["POST"])
 @jwt_required()
 def checkout():
-    """Process checkout with an optional discount_id from the frontend."""
+    """Process checkout with cart data directly from the request."""
     user_id = get_jwt_identity()
-    cart = Cart.get_cart()
+    data = request.get_json()
 
-    if not cart:
+    # Get cart items directly from request
+    cart_items = data.get("cart", [])
+    discount_id = data.get("discount_id")
+
+    if not cart_items:
         return jsonify({"error": "Cart is empty"}), 400
 
-    data = request.get_json()
-    discount_id = data.get("discount_id")
     total_price = 0
     order_items = []
     applied_discount = None
@@ -31,16 +33,12 @@ def checkout():
         discount = Discount.query.filter_by(id=discount_id, active=True).first()
         if discount:
             applied_discount = discount.to_dict()
-    else:
-        # Optional: fallback to first active discount (legacy behavior)
-        discount = Discount.query.filter_by(active=True).first()
-        if discount:
-            applied_discount = discount.to_dict()
 
-    for item in cart:
-        product = Product.query.get(item["product_id"])
+    # Process each item in the cart data from the client
+    for item in cart_items:
+        product = Product.query.get(item["id"])
         if not product:
-            return jsonify({"error": f"Product ID {item['product_id']} not found"}), 404
+            return jsonify({"error": f"Product ID {item['id']} not found"}), 404
 
         if product.stock < item["quantity"]:
             return jsonify({"error": f"Not enough stock for {product.name}"}), 400
@@ -63,6 +61,7 @@ def checkout():
             price_at_purchase=item_price
         ))
 
+    # Create the new order
     new_order = Order(user_id=user_id, total_price=total_price)
     db.session.add(new_order)
     db.session.flush()
@@ -71,8 +70,13 @@ def checkout():
         item.order_id = new_order.id
         db.session.add(item)
 
+    # Add activity log
+    log_entry = ActivityLog(user_id=user_id, action="Placed order")
+    db.session.add(log_entry)
+
     db.session.commit()
-    Cart.clear_cart()
+
+    # No need to call Cart.clear_cart() since cart is managed client-side
 
     return jsonify({
         "message": "Checkout successful",
