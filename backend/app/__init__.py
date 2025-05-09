@@ -16,7 +16,8 @@ def create_app():
     db.init_app(app)
     Migrate(app, db)  # Add this to enable migrations
     jwt.init_app(app)
-    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+  #  CORS(app, resources={r"/api/*": {"origins": "*"}},  supports_credentials=True)
+    CORS(app, resources={r"/api/*": {"origins": "http://localhost:8080"}})
 
     # Import and register blueprints (FIXED IMPORT PATH)
     # Import and register blueprints

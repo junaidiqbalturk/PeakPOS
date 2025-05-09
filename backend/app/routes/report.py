@@ -135,9 +135,9 @@ def inventory_status():
         low_stock = db.session.query(
             Product
         ).filter(
-            Product.quantity <= low_stock_threshold
+            Product.stock <= low_stock_threshold
         ).order_by(
-            Product.quantity
+            Product.stock
         ).limit(10).all()
 
         # Format the results - Handle Category objects
@@ -159,14 +159,14 @@ def inventory_status():
                 "id": product.id,
                 "name": product.name,
                 "category": category_name,
-                "quantity": product.quantity,
+                "quantity": product.stock,
                 "price": float(product.price)
             })
 
         # Get overall inventory stats
         inventory_stats = db.session.query(
             func.count(Product.id).label("total_products"),
-            func.sum(Product.quantity).label("total_stock"),
+            func.sum(Product.stock).label("total_stock"),
             func.avg(Product.price).label("avg_price")
         ).first()
 

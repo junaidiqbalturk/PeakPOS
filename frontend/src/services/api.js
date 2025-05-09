@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // UPDATED: Match your Flask app's route structure
-const API_URL = "http://127.0.0.1:5000/api"; // Add /api to match your backend routes
+const API_URL = "http://127.0.0.1:5000/api/"; // Add /api to match your backend routes
 
 // Create Axios Instance with correct baseURL
 const api = axios.create({

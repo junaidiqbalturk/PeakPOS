@@ -638,6 +638,7 @@ function placeOrder() {
     .then(response => {
       // Show success modal
       orderNumber.value = response.data.order_id || 'POS-' + Math.floor(100000 + Math.random() * 900000);
+      console.log(orderNumber.value);
       orderCompleted.value = true;
 
       // Clear cart after order is processed
