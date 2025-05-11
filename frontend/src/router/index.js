@@ -19,8 +19,18 @@ const routes = [
     component: AdminView,
     meta: { requiresAuth: true, requiresAdmin: true },
   },
+
   { path: "/products", component: ProductView, meta: { requiresAuth: true } },
   { path: "/sales", component: SalesView, meta: { requiresAuth: true } },
+  {
+    path: '/admin/products',
+    name: 'products-management',
+    component: () => import('../views/ProductManagement.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true
+    }
+  },
 ];
 
 const router = createRouter({
