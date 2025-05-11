@@ -11,7 +11,7 @@
             <span class="logo-icon">
               <i class="material-icons">point_of_sale</i>
             </span>
-            <h1 class="logo">Peak<span>POS</span></h1>
+            <img style="height: 66px;" src="../assets/logo-pp.png"><!--<h1 class="logo">Peak<span>POS</span></h1>-->
           </div>
         </div>
         <button class="toggle-btn" @click="toggleSidebar" aria-label="Toggle sidebar">

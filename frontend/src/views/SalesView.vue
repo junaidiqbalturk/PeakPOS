@@ -3,7 +3,7 @@
     <!-- Top Action Bar -->
     <div class="sales-action-bar">
       <div class="page-title">
-        <h2><i class="material-icons">point_of_sale</i> Sales</h2>
+        <img style="height: 65px;" src="../assets/logo-pp.png"><!--<h2><i class="material-icons">point_of_sale</i> Sales</h2>-->
         <p class="subtitle">Manage transactions and checkout</p>
       </div>
 
