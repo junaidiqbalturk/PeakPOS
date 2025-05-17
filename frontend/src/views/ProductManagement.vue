@@ -40,13 +40,13 @@
             <div class="tooltip" v-if="isSidebarCollapsed">Sales</div>
           </router-link>
           <router-link to="/admin/categories" class="nav-item">
-            <i class="material-icons">inventory</i>
+            <i class="material-icons">category</i>
             <span class="nav-label">Category Management</span>
             <span class="nav-indicator"></span>
             <div class="tooltip" v-if="isSidebarCollapsed">Inventory</div>
           </router-link>
           <router-link to="/products" class="nav-item active">
-            <i class="material-icons">category</i>
+            <i class="material-icons">inventory</i>
             <span class="nav-label">Products</span>
             <span class="nav-indicator"></span>
             <div class="tooltip" v-if="isSidebarCollapsed">Products</div>

@@ -31,10 +31,16 @@
             <span class="tooltip" v-if="isSidebarCollapsed">Sales</span>
           </router-link>
 
-          <router-link to="/inventory" class="nav-item">
+          <router-link to="/admin/categories" class="nav-item">
             <div class="nav-indicator"></div>
-            <i class="material-icons">inventory_2</i>
-            <span class="nav-label">Inventory</span>
+            <i class="material-icons">category</i>
+            <span class="nav-label">Category Management</span>
+            <span class="tooltip" v-if="isSidebarCollapsed">Inventory</span>
+          </router-link>
+          <router-link to="/admin/products" class="nav-item">
+            <div class="nav-indicator"></div>
+            <i class="material-icons">inventory</i>
+            <span class="nav-label">Products Managements</span>
             <span class="tooltip" v-if="isSidebarCollapsed">Inventory</span>
           </router-link>
 
