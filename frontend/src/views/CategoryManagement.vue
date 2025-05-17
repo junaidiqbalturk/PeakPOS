@@ -21,7 +21,7 @@
 
       <div class="sidebar-content">
         <nav class="nav-menu">
-          <router-link to="/" class="nav-item">
+          <router-link to="/dashboard" class="nav-item">
             <i class="material-icons">dashboard</i>
             <span class="nav-label">Dashboard</span>
             <span class="nav-indicator"></span>
@@ -33,15 +33,9 @@
             <span class="nav-indicator"></span>
             <div class="tooltip" v-if="isSidebarCollapsed">Sales</div>
           </router-link>
-          <router-link to="/inventory" class="nav-item">
-            <i class="material-icons">inventory</i>
-            <span class="nav-label">Inventory</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Inventory</div>
-          </router-link>
-          <router-link to="/products" class="nav-item">
+          <router-link to="/admin/products" class="nav-item">
             <i class="material-icons">inventory_2</i>
-            <span class="nav-label">Products</span>
+            <span class="nav-label">Products Management</span>
             <span class="nav-indicator"></span>
             <div class="tooltip" v-if="isSidebarCollapsed">Products</div>
           </router-link>

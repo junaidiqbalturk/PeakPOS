@@ -27,7 +27,7 @@
         </div>
 
         <nav class="nav-menu">
-          <router-link to="/" class="nav-item">
+          <router-link to="/dashboard" class="nav-item">
             <i class="material-icons">dashboard</i>
             <span class="nav-label">Dashboard</span>
             <span class="nav-indicator"></span>
@@ -39,7 +39,7 @@
             <span class="nav-indicator"></span>
             <div class="tooltip" v-if="isSidebarCollapsed">Sales</div>
           </router-link>
-          <router-link to="/inventory" class="nav-item">
+          <router-link to="/admin/categories" class="nav-item">
             <i class="material-icons">inventory</i>
             <span class="nav-label">Category Management</span>
             <span class="nav-indicator"></span>
