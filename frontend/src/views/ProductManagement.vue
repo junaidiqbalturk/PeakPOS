@@ -41,7 +41,7 @@
           </router-link>
           <router-link to="/inventory" class="nav-item">
             <i class="material-icons">inventory</i>
-            <span class="nav-label">Inventory</span>
+            <span class="nav-label">Category Management</span>
             <span class="nav-indicator"></span>
             <div class="tooltip" v-if="isSidebarCollapsed">Inventory</div>
           </router-link>
@@ -1263,6 +1263,7 @@ getPlaceholderImage() {
 
 <style scoped>
 /* Dashboard Layout Styles */
+
 .dashboard-app {
   display: flex;
   min-height: 100vh;

@@ -31,6 +31,15 @@ const routes = [
       requiresAdmin: true
     }
   },
+  {
+    path: '/admin/categories',
+    name: 'category-management',
+    component: () => import('../views/CategoryManagement.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true
+    }
+  },
 ];
 
 const router = createRouter({
