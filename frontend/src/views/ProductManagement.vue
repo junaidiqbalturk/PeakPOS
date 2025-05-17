@@ -934,6 +934,7 @@ export default {
         const response = await fetch('http://127.0.0.1:5000/api/products');
         if (response.ok) {
           this.products = await response.json();
+          console.log("Products data:", this.products);
         } else {
           console.error('Failed to fetch products');
           this.showToast('Failed to load products. Please try again.', 'error');
@@ -959,46 +960,20 @@ export default {
       }
     },
 
-    getProductImageUrl(product) {
-      // The backend sends the image_url field as 'image' in the API response
-      const imageUrl = product && (product.image_url || product.image);
+  getProductImageUrl(product) {
+  if (!product || !product.image_url) return this.getPlaceholderImage();
 
-      if (imageUrl) {
-        // Handle different formats of image URL
-        if (imageUrl.startsWith('http')) {
-          // If it's an absolute URL, return it as is
-          return imageUrl;
-        } else {
-          // Use the environment-specific backend URL
-          const isReplit = window.location.hostname.includes('replit');
-          const backendUrl = isReplit
-            ? window.location.origin.replace('-00-', '-01-')  // Replit environment
-            : ' C:\\Users\\junai\\PeakPOS\\backend\\app\\static\\';  // Local development
+  // Use full backend URL for images
+  const backendUrl = 'http://localhost:5000'; // Or from your config
+  let imagePath = product.image_url;
 
-          // For relative paths, prefix with backend URL
-          if (imageUrl.startsWith('/static/')) {
-            // Already has leading slash
-            return `${backendUrl}${imageUrl}`;
-          } else if (imageUrl.startsWith('static/')) {
-            // Add leading slash
-            return `${backendUrl}/${imageUrl}`;
-          } else if (imageUrl.startsWith('product_images/')) {
-            // Product images inside static/product_images
-            return `${backendUrl}/static/${imageUrl}`;
-          } else {
-            // For any other format, assume it's relative to static folder
-            return `${backendUrl}/static/${imageUrl}`;
-          }
-        }
-      }
-
-      // Log the missing image for debugging
-      console.log('No image URL found for product:', product?.id, product?.name);
-
-
-      // Use a data URL placeholder instead of fetching from server
-      return 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNlOWVjZWYiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmaWxsPSIjNmM3NTdkIj5ObyBJbWFnZTwvdGV4dD48cGF0aCBkPSJNODAgOTAgTDEyMCAxMzAgTTE2MCA5MCBMODAgMTcwIiBzdHJva2U9IiM2Yzc1N2QiIHN0cm9rZS13aWR0aD0iMyIvPjwvc3ZnPg==';
-    },
+  // Remove any duplicate path segments
+  const filename = imagePath.split('/').pop();
+  return `${backendUrl}/static/product_images/${filename}`;
+},
+getPlaceholderImage() {
+  return 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNlOWVjZWYiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmaWxsPSIjNmM3NTdkIj5ObyBJbWFnZTwvdGV4dD48cGF0aCBkPSJNODAgOTAgTDEyMCAxMzAgTTE2MCA5MCBMODAgMTcwIiBzdHJva2U9IiM2Yzc1N2QiIHN0cm9rZS13aWR0aD0iMyIvPjwvc3ZnPg==';
+},
 
     handleImageError(e) {
       // Use a data URL placeholder instead of fetching from server

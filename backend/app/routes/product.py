@@ -28,7 +28,7 @@ def save_product_image(file, product_id):
         return None
 
     # Create folder for product images if it doesn't exist
-    product_folder = os.path.join(UPLOAD_FOLDER, f'product_{product_id}')
+    product_folder = os.path.join(UPLOAD_FOLDER)
     os.makedirs(product_folder, exist_ok=True)
 
     # Secure the filename and save the file
@@ -37,7 +37,7 @@ def save_product_image(file, product_id):
     file.save(file_path)
 
     # Return the relative URL path for the database
-    return f'/static/product_images/product_{product_id}/{filename}'
+    return f'/static/product_images/{filename}'
 
 
 # Create Product

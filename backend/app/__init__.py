@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_cors import CORS
@@ -58,5 +58,10 @@ def create_app():
     @app.route("/api/hello", methods=["GET"])
     def hello():
         return jsonify({"message": "Welcome to PeakPOS API!"})
+
+    @app.route('/test-image')
+    def test_image():
+        """Test route to verify static file serving"""
+        return send_from_directory('static/product_images', 'FBK36CA1.webp')
 
     return app

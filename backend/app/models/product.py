@@ -26,6 +26,6 @@ class Product(db.Model):
             "stock": self.stock,
             "category_id": self.category_id,
             "category_name": self.category.name if self.category else None,
-            "image_url": f"/static/product_images{self.image_url}" if self.image_url else None,
+            "image_url": self.image_url,   #f"/static/product_images/{self.image_url}" if self.image_url else None,
             "suppliers": [assoc.to_dict() for assoc in self.supplier_associations]  # Include supplier details
         }
