@@ -49,6 +49,15 @@ const routes = [
       requiresAdmin: true
     }
   },
+    {
+    path: '/admin/settings/discounts',
+    name: 'discount-management',
+    component: () => import('../views/DiscountManagement.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true
+    }
+  },
 ];
 
 const router = createRouter({
