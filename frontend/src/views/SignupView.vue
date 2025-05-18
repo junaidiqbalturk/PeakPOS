@@ -33,124 +33,473 @@ const signup = async () => {
 
 
 <template>
-  <div class="full-screen-container">
-    <v-card class="pa-6 rounded-lg shadow-lg signup-card">
-      <v-card-title class="text-center text-h4 font-weight-bold">
-        Create an Account
-      </v-card-title>
+  <div class="signup-container">
+    <!-- Left Panel with Illustration -->
+    <div class="illustration-panel">
+      <div class="logo-container">
+        <img src="../assets/logo-pp.png" alt="PeakPOS Logo" class="logo">
+      </div>
+      <div class="illustration">
+        <img src="../assets/illustration.svg" alt="Illustration" class="illustration-image">
+      </div>
+      <div class="tagline">
+        <h2>Welcome to PeakPOS</h2>
+        <p>The smarter way to manage your business</p>
+      </div>
+      <div class="features">
+        <div class="feature-item">
+          <i class="material-icons">shopping_cart</i>
+          <span>Streamline your sales</span>
+        </div>
+        <div class="feature-item">
+          <i class="material-icons">inventory</i>
+          <span>Manage inventory easily</span>
+        </div>
+        <div class="feature-item">
+          <i class="material-icons">bar_chart</i>
+          <span>Real-time analytics</span>
+        </div>
+      </div>
+    </div>
 
-      <v-card-subtitle class="text-center text-grey-darken-1">
-        Join PeakPOS today
-      </v-card-subtitle>
+    <!-- Right Panel with Form -->
+    <div class="form-panel">
+      <div class="form-container">
+        <div class="form-header">
+          <h1>Create Your Account</h1>
+          <p>Join thousands of businesses using PeakPOS</p>
+        </div>
 
-      <v-alert v-if="errorMessage" type="error" class="mb-4">
-        {{ errorMessage }}
-      </v-alert>
+        <div v-if="errorMessage" class="alert error">
+          <i class="material-icons">error</i>
+          <span>{{ errorMessage }}</span>
+        </div>
 
-      <v-alert v-if="successMessage" type="success" class="mb-4">
-        {{ successMessage }}
-      </v-alert>
+        <div v-if="successMessage" class="alert success">
+          <i class="material-icons">check_circle</i>
+          <span>{{ successMessage }}</span>
+        </div>
 
-      <v-form @submit.prevent="signup">
-        <v-text-field
-          v-model="username"
-          label="Username"
-          variant="outlined"
-          prepend-inner-icon="mdi-account"
-          class="custom-field"
-          required
-        ></v-text-field>
+        <form @submit.prevent="signup" class="signup-form">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <div class="input-container">
+              <i class="material-icons">person</i>
+              <input
+                id="username"
+                v-model="username"
+                type="text"
+                placeholder="Enter your username"
+                required
+              />
+            </div>
+          </div>
 
-        <v-text-field
-          v-model="email"
-          label="Email"
-          variant="outlined"
-          prepend-inner-icon="mdi-email"
-          class="custom-field"
-          required
-        ></v-text-field>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <div class="input-container">
+              <i class="material-icons">email</i>
+              <input
+                id="email"
+                v-model="email"
+                type="email"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+          </div>
 
-        <v-text-field
-          v-model="password"
-          label="Password"
-          type="password"
-          variant="outlined"
-          prepend-inner-icon="mdi-lock"
-          class="custom-field"
-          required
-        ></v-text-field>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-container">
+              <i class="material-icons">lock</i>
+              <input
+                id="password"
+                v-model="password"
+                type="password"
+                placeholder="Create a password"
+                required
+              />
+            </div>
+          </div>
 
-        <v-text-field
-          v-model="confirmPassword"
-          label="Confirm Password"
-          type="password"
-          variant="outlined"
-          prepend-inner-icon="mdi-lock-check"
-          class="custom-field"
-          required
-        ></v-text-field>
+          <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <div class="input-container">
+              <i class="material-icons">lock_outline</i>
+              <input
+                id="confirmPassword"
+                v-model="confirmPassword"
+                type="password"
+                placeholder="Confirm your password"
+                required
+              />
+            </div>
+          </div>
 
-        <v-btn
-          :loading="loading"
-          block
-          color="blue-darken-3"
-          variant="elevated"
-          type="submit"
-          class="mt-4 rounded-lg animate-btn"
-        >
-          Sign Up
-        </v-btn>
-      </v-form>
+          <button
+            type="submit"
+            class="signup-button"
+            :class="{ 'loading': loading }"
+            :disabled="loading"
+          >
+            <span v-if="!loading">Create Account</span>
+            <div v-else class="spinner"></div>
+          </button>
+        </form>
 
-      <v-card-text class="text-center mt-3">
-        <span class="text-grey-darken-1">Already have an account?</span>
-        <router-link to="/" class="text-primary font-weight-bold">Login</router-link>
-      </v-card-text>
-    </v-card>
+        <div class="form-footer">
+          <p>Already have an account? <router-link to="/">Sign In</router-link></p>
+        </div>
+
+        <div class="terms">
+          <p>By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* Full-Screen Background */
-.full-screen-container {
-  position: absolute;
+.signup-container {
+  display: flex;
+  min-height: 100vh;
   width: 100%;
-  height: 100vh;
-  top: 0;
-  left: 0;
-  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  background-color: #f5f7fa;
+}
+
+/* Left Panel - Illustration */
+.illustration-panel {
+  flex: 1;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.logo-container {
+  margin-bottom: 2rem;
+}
+
+.logo {
+  height: 60px;
+}
+
+.illustration {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 2rem 0;
 }
 
-/* Modern Signup Card */
-.signup-card {
-  max-width: 420px;
-  width: 90%;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  padding: 24px;
+.illustration-image {
+  max-width: 80%;
+  height: auto;
 }
 
-/* Custom Input Fields */
-.custom-field {
+.tagline {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.tagline h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.tagline p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 10px;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.feature-item:hover {
+  transform: translateX(5px);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.feature-item i {
+  font-size: 1.5rem;
+}
+
+/* Right Panel - Form */
+.form-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 450px;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.form-header h1 {
+  font-size: 1.8rem;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.form-header p {
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
   border-radius: 8px;
+  margin-bottom: 1.5rem;
 }
 
-/* Button Animation */
-.animate-btn {
-  transition: all 0.3s ease;
+.alert.error {
+  background-color: #fee2e2;
+  color: #ef4444;
 }
-.animate-btn:hover {
-  transform: scale(1.05);
+
+.alert.success {
+  background-color: #dcfce7;
+  color: #10b981;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: #f8fafc;
+}
+
+.input-container:focus-within {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.input-container i {
+  color: #64748b;
+  margin-right: 0.5rem;
+}
+
+.input-container input {
+  width: 100%;
+  padding: 1rem 0;
+  border: none;
+  background-color: transparent;
+  font-size: 1rem;
+  color: #1e293b;
+}
+
+.input-container input:focus {
+  outline: none;
+}
+
+.signup-button {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(to right, #4f46e5, #7c3aed);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.signup-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.signup-button:active {
+  transform: translateY(0);
+}
+
+.signup-button.loading {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.form-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #64748b;
+}
+
+.form-footer a, .terms a {
+  color: #7c3aed;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.form-footer a:hover, .terms a:hover {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+
+.terms {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #94a3b8;
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .signup-container {
+    flex-direction: column;
+  }
+
+  .illustration-panel {
+    padding: 2rem;
+  }
+
+  .features {
+    flex-direction: row;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .feature-item {
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem 0.5rem;
+  }
+
+  .feature-item:hover {
+    transform: translateY(-5px);
+  }
+}
+
 @media (max-width: 768px) {
-  .signup-card {
-    padding: 20px;
+  .illustration-panel {
+    padding: 1.5rem;
+  }
+
+  .tagline h2 {
+    font-size: 1.5rem;
+  }
+
+  .tagline p {
+    font-size: 1rem;
+  }
+
+  .features {
+    gap: 0.5rem;
+  }
+
+  .feature-item i {
+    font-size: 1.25rem;
+  }
+
+  .feature-item span {
+    font-size: 0.875rem;
+  }
+
+  .form-panel {
+    padding: 1.5rem;
+  }
+
+  .form-container {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .illustration-panel {
+    padding: 1rem;
+  }
+
+  .features {
+    flex-direction: column;
+  }
+
+  .feature-item {
+    flex-direction: row;
+    text-align: left;
+    padding: 0.75rem;
+  }
+
+  .feature-item:hover {
+    transform: translateX(5px);
+  }
+
+  .form-panel {
+    padding: 1rem;
+  }
+
+  .form-container {
+    padding: 1rem;
+  }
+
+  .form-header h1 {
+    font-size: 1.5rem;
   }
 }
 </style>

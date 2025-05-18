@@ -196,7 +196,7 @@ onMounted(() => {
   min-height: 100vh;
   width: 100%;
   background-color: #0c1220; /* Fallback color */
-  background-image: url('../assets/dynamic-login-bg.svg');
+  background-image: url('../assets/animated-bg.svg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
