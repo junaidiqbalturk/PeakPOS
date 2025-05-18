@@ -64,4 +64,6 @@ def create_app():
         """Test route to verify static file serving"""
         return send_from_directory('static/product_images', 'FBK36CA1.webp')
 
+
+
     return app
