@@ -40,6 +40,15 @@ const routes = [
       requiresAdmin: true
     }
   },
+    {
+    path: '/admin/settings',
+    name: 'Settings',
+    component: () => import('../views/Settings.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true
+    }
+  },
 ];
 
 const router = createRouter({

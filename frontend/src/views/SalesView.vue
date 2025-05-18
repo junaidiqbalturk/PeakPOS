@@ -42,7 +42,7 @@
         </div>
 
         <button class="mobile-cart-toggle" @click="toggleMobileCart">
-          <i class="material-icons">shopping_cart</i>
+          <i class="material-icons">shopping_bag</i>
           <span class="item-count" v-if="cart.length">{{ cart.length }}</span>
         </button>
       </div>
@@ -2506,7 +2506,7 @@ getProductImageUrl(product) {
     display: flex;
     flex-direction: column;
   }
-  
+
 }
 
 @media (max-width: 1024px) {
