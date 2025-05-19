@@ -1,11 +1,13 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.checkout import Checkout
-from app.models.discount import Discount
+from  app.models.discount import Discount
 from app.models.order import Order, OrderItem
 from app.models.cart import Cart
 from app.models.product import Product
 from app import db
+
+from app.models.activity_log import ActivityLog
 
 checkout_bp = Blueprint("checkout", __name__)
 
@@ -62,7 +64,7 @@ def checkout():
         ))
 
     # Create the new order
-    new_order = Order(user_id=user_id, total_price=total_price)
+    new_order = Order(user_id=user_id, total_price=total_price, discount_id=discount_id if applied_discount else None)
     db.session.add(new_order)
     db.session.flush()
 
@@ -81,5 +83,6 @@ def checkout():
     return jsonify({
         "message": "Checkout successful",
         "order_id": new_order.id,
-        "discount_applied": applied_discount
+        "discount_applied": applied_discount,
+        "total_price": total_price
     }), 201

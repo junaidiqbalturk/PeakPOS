@@ -976,6 +976,7 @@ getProductImageUrl(product) {
             product_id: item.id,
             quantity: item.quantity,
             price: item.price
+
           })),
           discount_id: this.selectedDiscount,
           subtotal: this.calculateSubtotal(),
