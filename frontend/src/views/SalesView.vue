@@ -96,7 +96,7 @@
     <!-- Content Grid -->
     <div class="content-grid">
       <!-- Product List -->
-      <div class="product-section">
+      <div class="product-section  product-list-scrollable">
         <div v-if="loading" class="loading-container">
           <div class="spinner-wrapper">
             <div class="spinner"></div>
@@ -214,6 +214,7 @@
       </div>
 
       <!-- Cart Section -->
+      <div class ="cart-container">
       <div class="cart-section" :class="{ 'mobile-cart-visible': isMobileCartVisible }">
         <div class="cart-header">
           <h3>
@@ -338,15 +339,21 @@
               </div>
             </div>
 
-            <button
-              class="btn-checkout"
-              :disabled="cart.length === 0 || processingOrder"
-              @click="proceedToCheckout"
-            >
-              <i class="material-icons">{{ processingOrder ? 'hourglass_top' : 'shopping_cart_checkout' }}</i>
-              <span>{{ processingOrder ? 'Processing...' : 'Complete Purchase' }}</span>
-            </button>
+
+              <div class="purchase-button-container">
+                    <button
+                  class="btn-checkout"
+                  :disabled="cart.length === 0 || processingOrder"
+                  @click="proceedToCheckout"
+                >
+                  <i class="material-icons">{{ processingOrder ? 'hourglass_top' : 'shopping_cart_checkout' }}</i>
+                  <span>{{ processingOrder ? 'Processing...' : 'Complete Purchase' }}</span>
+                  </button>
+
+            </div>
+
           </div>
+        </div>
         </div>
       </div>
     </div>
@@ -1085,6 +1092,26 @@ getProductImageUrl(product) {
 </script>
 
 <style scoped>
+.purchase-button-container {
+  margin-top: auto; /* Pushes button to the bottom of flex container */
+  padding: 16px;
+  background-color: #fff; /* Optional: for visual separation */
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow */
+}
+
+.cart-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+  overflow-y: auto;
+}
+.product-list-scrollable {
+  overflow-y: auto;
+  max-height: 60vh; /* Adjust as needed */
+  padding-bottom: 16px;
+}
+
 .sales-view {
   display: flex;
   flex-direction: column;
@@ -1812,26 +1839,28 @@ getProductImageUrl(product) {
   background-color: var(--primary-color-dark, #4338ca);
 }
 
-.cart-content {
+.cart-section {
+  /* ... existing styles ... */
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
-  overflow: hidden;
-  height: 100%; /* Add this */
+  height: 100vh; /* Full viewport height */
+}
+
+.cart-header {
+  /* ... existing styles ... */
+  flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.cart-content {
+  flex: 1;
+  overflow-y: auto; /* Enable vertical scrolling */
+  padding: 1rem;
 }
 
 .cart-items {
-  flex-grow: 1;
+  /* ... existing styles ... */
+  height: calc(100% - 120px); /* Adjust based on your complete purchase button height */
   overflow-y: auto;
-  padding: 8px 0;
-  min-height: 0; /* Important for flex children to scroll properly */
-}
-
-.cart-item {
-  display: flex;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color, #e2e8f0);
-  transition: background-color 0.2s ease;
 }
 
 .cart-item:hover {

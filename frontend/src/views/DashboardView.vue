@@ -58,7 +58,7 @@
             <span class="tooltip" v-if="isSidebarCollapsed">Reports</span>
           </router-link>
 
-          <router-link to="/settings" class="nav-item">
+          <router-link to="admin/settings" class="nav-item">
             <div class="nav-indicator"></div>
             <i class="material-icons">settings</i>
             <span class="nav-label">Settings</span>
