@@ -69,11 +69,11 @@
       <div class="sidebar-footer">
         <div class="user-profile" @click="isUserMenuOpen = !isUserMenuOpen">
           <div class="avatar-wrapper">
-            <div class="avatar">JD</div>
+            <div class="avatar">AD</div>
             <div class="status-indicator online"></div>
           </div>
           <div class="user-info">
-            <div class="user-name">John Doe</div>
+            <div class="user-name">{{ currentUser.name }}</div>
             <div class="user-role">Administrator</div>
           </div>
           <div class="user-menu-toggle">
@@ -93,7 +93,7 @@
             <span>Account Settings</span>
           </div>
           <div class="dropdown-divider"></div>
-          <div class="dropdown-item logout">
+          <div class="dropdown-item logout" @click="logout">
             <i class="material-icons">logout</i>
             <span>Logout</span>
           </div>
@@ -149,7 +149,7 @@
           </div>
 
           <div class="mobile-avatar" @click="isUserMenuOpen = !isUserMenuOpen">
-            <div class="avatar small">JD</div>
+            <div class="avatar small">AD</div>
           </div>
         </div>
       </div>
@@ -623,6 +623,11 @@ export default {
   },
 
   methods: {
+    logout(){
+       //1. remove token
+      localStorage.removeItem('token');
+      this.$router.push('/');
+    },
     async fetchCurrentUser() {
     try {
       // Get the token (assuming you use JWT authentication)
