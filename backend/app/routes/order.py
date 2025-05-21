@@ -186,7 +186,9 @@ def get_all_orders():
         return jsonify({"error": "Unauthorized, admin access only"}), 403
 
     # Fetch all orders
-    orders = Order.query.options(db.joinedload(Order.order_items)).all()
+    orders = Order.query.options(db.joinedload(Order.order_items))\
+        .order_by(Order.created_at.desc())\
+        .all()
 
     order_list = []
     for order in orders:

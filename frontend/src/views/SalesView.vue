@@ -973,7 +973,7 @@ getProductImageUrl(product) {
         // Prepare order data
         const orderData = {
           cart: this.cart.map(cart => ({
-            id: cart.id, //matches with backend checkout endpoint 
+            id: cart.id, //matches with backend checkout endpoint
             quantity: cart.quantity,
             price: cart.price
 

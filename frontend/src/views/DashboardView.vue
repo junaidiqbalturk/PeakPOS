@@ -444,7 +444,7 @@
               <thead>
                 <tr>
                   <th>Order ID</th>
-                  <th>Customer</th>
+                  <th>Product Name</th>
                   <th>Amount</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -862,7 +862,7 @@ export default {
         try {
           const [productsRes, ordersRes] = await Promise.all([
             axios.get("http://localhost:5000/api/products", config),
-            axios.get("http://localhost:5000/api/orders", config)
+            axios.get("http://localhost:5000/api/admin/orders", config)
           ]);
 
           // Update metrics as fallback
@@ -873,15 +873,21 @@ export default {
             }
           }
 
-          if (ordersRes.data && Array.isArray(ordersRes.data)) {
-            // Process orders for recent orders table
-            this.recentOrders = ordersRes.data.slice(0, 5).map(order => ({
-              id: order.order_id || Math.floor(Math.random() * 10000),
-              customer: order.user_id || 'Guest Customer',
-              amount: order.total_price || 0,
-              status: order.status || 'completed'
-            }));
-          }
+          const products = productsRes.data;
+
+this.recentOrders = ordersRes.data.slice(0, 5).map(order => {
+  const firstItem = order.items[0];  // assuming at least one item per order
+  const product = firstItem
+    ? products.find(p => p.id === firstItem.product_id)
+    : null;
+
+  return {
+    id: order.order_id || Math.floor(Math.random() * 10000),
+    customer: product ? product.name : 'Unknown Product',
+    amount: order.total_price || 0,
+    status: order.status || 'completed'
+  };
+});
         } catch (apiError) {
           console.error("API Error:", apiError);
         }
