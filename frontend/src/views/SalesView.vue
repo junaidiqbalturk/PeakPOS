@@ -972,10 +972,10 @@ getProductImageUrl(product) {
       try {
         // Prepare order data
         const orderData = {
-          items: this.cart.map(item => ({
-            product_id: item.id,
-            quantity: item.quantity,
-            price: item.price
+          cart: this.cart.map(cart => ({
+            id: cart.id, //matches with backend checkout endpoint 
+            quantity: cart.quantity,
+            price: cart.price
 
           })),
           discount_id: this.selectedDiscount,
@@ -985,10 +985,11 @@ getProductImageUrl(product) {
         };
 
         // Send the order to the backend
-        const response = await fetch('http://127.0.0.1:5000/api/orders', {
+        const response = await fetch('http://127.0.0.1:5000/api/checkout', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`  // Including JWT Token
           },
           body: JSON.stringify(orderData)
         });
@@ -1002,7 +1003,7 @@ getProductImageUrl(product) {
 
         // Store order summary for receipt
         this.orderSummary = {
-          items: [...this.cart],
+          cart: [...this.cart],
           subtotal: this.calculateSubtotal(),
           tax: this.calculateTax(),
           discount: this.calculateDiscountAmount(),

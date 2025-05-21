@@ -17,7 +17,9 @@ checkout_bp = Blueprint("checkout", __name__)
 def checkout():
     """Process checkout with cart data directly from the request."""
     user_id = get_jwt_identity()
+    print("Incoming checkout data:", request.get_json())
     data = request.get_json()
+
 
     # Get cart items directly from request
     cart_items = data.get("cart", [])
