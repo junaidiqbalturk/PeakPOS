@@ -507,6 +507,12 @@
         </button>
       </div>
     </transition>
+    <div v-if="toast"
+         :class="['toast', `toast-${toast.type}`]"
+         style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+      {{ toast.message }}
+    </div>
+
   </div>
 </template>
 
@@ -1094,6 +1100,23 @@ getProductImageUrl(product) {
 </script>
 
 <style scoped>
+/* Toast Styling here */
+.toast {
+  padding: 1rem;
+  border-radius: 4px;
+  color: white;
+  min-width: 250px;
+  text-align: center;
+}
+
+.toast-success {
+  background-color: #4CAF50;
+}
+
+.toast-error {
+  background-color: #f44336;
+}
+/* Toast Styling here */
 .purchase-button-container {
   margin-top: auto; /* Pushes button to the bottom of flex container */
   padding: 16px;

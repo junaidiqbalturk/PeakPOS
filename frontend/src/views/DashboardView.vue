@@ -485,6 +485,9 @@ import axios from 'axios';
 export default {
   data() {
     return {
+      //Toast
+      toast: null,
+
       // Dark mode settings
       isDarkMode: false,
 
@@ -623,10 +626,45 @@ export default {
   },
 
   methods: {
-    logout(){
-       //1. remove token
-      localStorage.removeItem('token');
-      this.$router.push('/');
+    showToast(title, message, type = 'success') {
+      // Clear any existing timeout
+      if (this.toast.timeout) {
+        clearTimeout(this.toast.timeout);
+      }
+
+      // Set icon based on type
+      let icon = 'check_circle';
+      if (type === 'error') icon = 'error';
+      else if (type === 'warning') icon = 'warning';
+      else if (type === 'info') icon = 'info';
+
+      // Update toast data
+      this.toast = {
+        show: true,
+        type,
+        title,
+        message,
+        icon,
+        timeout: null
+      };
+
+      // Auto-hide after 4 seconds
+      this.toast.timeout = setTimeout(() => {
+        this.toast.show = false;
+      }, 3000);
+    },
+    async logout(){
+       try {
+        // Clear Token from JWT
+        localStorage.removeItem('token');
+        this.showToast('Logged out successfully');
+        this.$router.push('/login');
+      } catch (error) {
+        this.showToast('Error logging out', 'error');
+        console.error('Logout error:', error);
+      }
+
+
     },
     async fetchCurrentUser() {
     try {
