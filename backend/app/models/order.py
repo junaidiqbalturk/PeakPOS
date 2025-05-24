@@ -12,7 +12,7 @@ class Order(db.Model):
     discount = db.relationship('Discount', backref='order')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     order_items = db.relationship('OrderItem', backref='order', lazy=True, cascade="all, delete-orphan")
-    receipt = db.relationship("Receipt", back_populates="order", uselist=False)
+    receipts = db.relationship("Receipt", back_populates="order", cascade="all, delete-orphan")
 
 
 class OrderItem(db.Model):

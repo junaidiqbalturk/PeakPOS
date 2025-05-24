@@ -15,5 +15,5 @@ class Receipt(db.Model):
     # Link to PDF for later generation
     pdf_url = db.Column(db.String(255), nullable=True)
 
-    order = db.relationship('Order', backref='receipts')
-    created_by_user = db.relationship('User', backref='receipts')
+    order = db.relationship('Order', back_populates='receipts')
+    user = db.relationship("User", back_populates="receipts")

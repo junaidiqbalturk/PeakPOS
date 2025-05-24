@@ -484,7 +484,7 @@
                 <i class="material-icons">shopping_cart</i>
                 New Order
               </button>
-              <button class="btn-receipt">
+              <button class="btn-receipt" @click="printReceipt">
                 <i class="material-icons">receipt</i>
                 Print Receipt
               </button>
@@ -517,8 +517,6 @@
 </template>
 
 <script>
-
-
 export default {
   name: 'SalesView',
   data() {
@@ -972,6 +970,7 @@ getProductImageUrl(product) {
     },
 
     // Checkout Process
+
     async proceedToCheckout() {
       if (this.cart.length === 0 || this.processingOrder) return;
 
@@ -1034,6 +1033,79 @@ getProductImageUrl(product) {
         this.processingOrder = false;
       }
     },
+    async printReceipt() {
+  console.log('Print Receipt button clicked');
+  if (!this.orderSummary?.order_id) {
+    console.error('Order ID not found');
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://127.0.0.1:5000/api/receipts/${this.orderSummary.order_id}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    if (!response.ok) throw new Error('Failed to fetch receipt');
+
+    const receipt = await response.json();
+
+    const receiptHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Receipt</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h2 { text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+            tfoot td { font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h2>Receipt #${receipt.id}</h2>
+          <p>Date: ${receipt.timestamp}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${receipt.items.map(item => `
+                <tr>
+                  <td>${item.name}</td>
+                  <td>${item.quantity}</td>
+                  <td>${item.price}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr><td colspan="2">Subtotal</td><td>${receipt.subtotal}</td></tr>
+              <tr><td colspan="2">Tax</td><td>${receipt.tax}</td></tr>
+              <tr><td colspan="2">Discount</td><td>${receipt.discount}</td></tr>
+              <tr><td colspan="2">Total</td><td>${receipt.total}</td></tr>
+            </tfoot>
+          </table>
+        </body>
+      </html>
+    `;
+
+    const win = window.open('', '_blank');
+    win.document.write(receiptHtml);
+    win.document.close();
+    win.focus();
+    win.print();
+  } catch (error) {
+    console.error('Print receipt error:', error);
+  }
+},
+
+
 
     closeOrderComplete() {
       this.showOrderComplete = false;
