@@ -517,6 +517,8 @@
 </template>
 
 <script>
+
+
 export default {
   name: 'SalesView',
   data() {
@@ -1016,6 +1018,7 @@ getProductImageUrl(product) {
           total: this.calculateTotal(),
           order_id: orderResponse.id
         };
+
 
         // Show success modal
         this.showOrderComplete = true;

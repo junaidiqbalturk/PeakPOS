@@ -9,6 +9,8 @@ class User(db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(20), default="cashier")  # Default role is "cashier"
 
+    receipts = db.relationship("Receipt", back_populates="user")
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password) #.decode('utf-8')
 

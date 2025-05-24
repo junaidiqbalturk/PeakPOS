@@ -36,6 +36,7 @@ def create_app():
     from app.routes.discount import discount_bp  # Import Activity Log API
     from app.routes.returns import returns_bp  # Import Returns  API
     from app.routes.refunds import refund_bp  # Import refund API
+    from app.routes.receipt import receipt_bp  #Import Receipt API
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(product_bp, url_prefix="/api")  # Register products API
@@ -52,6 +53,7 @@ def create_app():
     app.register_blueprint(discount_bp, url_prefix="/api")  # Register discount API
     app.register_blueprint(returns_bp, url_prefix="/api")  # Register R3turns API
     app.register_blueprint(refund_bp, url_prefix="/api")  # Register Refund API
+    app.register_blueprint(receipt_bp, url_prefix="/api")  # Register Receipt API
     from app.models import User, Product, Category, Order, OrderItem, supplier, activity_log
 
     # Test route
