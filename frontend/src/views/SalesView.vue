@@ -1018,24 +1018,46 @@ getProductImageUrl(product) {
           total: this.calculateTotal(),
           order_id: order_id
         };
-        // After order completion status Receipt generation
-        const receiptResponse = await fetch('http://127.0.0.1:5000/api/receipts', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`  // Including JWT Token
-          },
-          body: JSON.stringify({order_id: order_id})
-        });
 
-        if(!receiptResponse.ok){
-          throw new Error("Failed to generate receipt");
-        } else{
-          const receiptData = await receiptResponse.json();
-          console.log("Receipt created successfully");
-          console.log("Receipt Data:", receiptData);
-          this.receiptData = receiptData;
+        //preparing the Payload to throw it to create receipt generation
+        const receiptPayload= {
+          order_id: this.orderSummary.order_id,
+          snapshot: {
+            items: this.cart.map(item => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity
+            })),
+            subtotal: this.orderSummary.subtotal,
+            tax: this.orderSummary.tax,
+            discount: this.orderSummary.discount,
+            total: this.orderSummary.total
+          }
+        };
+        console.log('Receipt Payload:', receiptPayload); //logging
+
+        // After Payload now send the request to POST endpoint of Receipt
+        try {
+          const receiptResponse = await fetch('http://127.0.0.1:5000/api/receipts', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`  // Including JWT Token
+            },
+            body: JSON.stringify(receiptPayload)
+          });
+          if (!receiptResponse.ok) {
+            throw new Error('Failed to process order');
+          }
+
+          const receiptResult = await receiptResponse.json();
+          console.log("Receipt created:", receiptResult);
+        } catch (err){
+          console.error("Error creating Receipt", err);
+          this.showToast("Receipt Error","Failed to Generate Receipt.","error");
         }
+
 
         // Show success modal
         this.showOrderComplete = true;
@@ -1069,6 +1091,7 @@ getProductImageUrl(product) {
     if (!response.ok) throw new Error('Failed to fetch receipt');
 
     const receipt = await response.json();
+    console.log('Receipt fetched:', receipt);
 
     const receiptHtml = `
       <!DOCTYPE html>

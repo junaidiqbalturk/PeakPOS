@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
-from app.models import db, Order, User
+from app.models import Order, User
+from app import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from app.models.receipt import Receipt
