@@ -1053,6 +1053,7 @@ getProductImageUrl(product) {
 
           const receiptResult = await receiptResponse.json();
           console.log("Receipt created:", receiptResult);
+          console.log('Receipt Items:', receiptResult.items);
         } catch (err){
           console.error("Error creating Receipt", err);
           this.showToast("Receipt Error","Failed to Generate Receipt.","error");
@@ -1094,54 +1095,173 @@ getProductImageUrl(product) {
     console.log('Receipt fetched:', receipt);
 
     const receiptHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Receipt</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h2 { text-align: center; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-            tfoot td { font-weight: bold; }
-          </style>
-        </head>
-        <body>
-          <h2>Receipt #${receipt.id}</h2>
-          <p>Date: ${receipt.timestamp}</p>
-          <table>
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Qty</th>
-                <th>Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${receipt.items.map(item => `
-                <tr>
-                  <td>${item.name}</td>
-                  <td>${item.quantity}</td>
-                  <td>${item.price}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-            <tfoot>
-              <tr><td colspan="2">Subtotal</td><td>${receipt.subtotal}</td></tr>
-              <tr><td colspan="2">Tax</td><td>${receipt.tax}</td></tr>
-              <tr><td colspan="2">Discount</td><td>${receipt.discount}</td></tr>
-              <tr><td colspan="2">Total</td><td>${receipt.total}</td></tr>
-            </tfoot>
-          </table>
-        </body>
-      </html>
-    `;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Receipt #${receipt.receipt_id}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      padding: 20px;
+      margin: 0;
+    }
+
+    .receipt-container {
+      max-width: 600px;
+      margin: auto;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .receipt-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .receipt-header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      color: #4a4a4a;
+    }
+
+    .receipt-meta {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background-color: #f1f1f1;
+      font-weight: 600;
+    }
+
+    tfoot td {
+      font-weight: bold;
+    }
+
+    .totals {
+      margin-top: 10px;
+    }
+
+    .totals td {
+      text-align: right;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #999;
+      margin-top: 30px;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .receipt-container {
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .footer {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="receipt-container">
+    <div class="receipt-header">
+      <h1>Order Receipt</h1>
+    </div>
+    <div class="receipt-meta">
+      <p><strong>Receipt ID:</strong> ${receipt.receipt_id}</p>
+      <p><strong>Date:</strong> ${new Date(receipt.created_at).toLocaleString()}</p>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${receipt.snapshot.items.map(item => `
+          <tr>
+            <td>${item.name}</td>
+            <td>${item.quantity}</td>
+            <td>${item.price.toFixed(2)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="2">Subtotal</td>
+          <td>${receipt.snapshot.subtotal.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Tax</td>
+          <td>${receipt.snapshot.tax.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Discount</td>
+          <td>${receipt.snapshot.discount.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Total</td>
+          <td>${receipt.snapshot.total.toFixed(2)}</td>
+        </tr>
+      </tfoot>
+    </table>
+    <div class="footer">
+      <p>Thank you for your purchase!</p>
+      <p>POS System by PeakPOS</p>
+    </div>
+  </div>
+</body>
+</html>
+`;
 
     const win = window.open('', '_blank');
+    win.document.open();
     win.document.write(receiptHtml);
     win.document.close();
-    win.focus();
-    win.print();
+
+    //Ensure styles are applied before print preview
+    win.onload = () => {
+      setTimeout(() => {
+        win.focus();
+        win.print();
+        win.close();
+      },500);
+    };
   } catch (error) {
     console.error('Print receipt error:', error);
   }
