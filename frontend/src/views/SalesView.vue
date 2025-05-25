@@ -484,7 +484,7 @@
                 <i class="material-icons">shopping_cart</i>
                 New Order
               </button>
-              <button class="btn-receipt" @click="printReceipt">
+              <button class="btn-receipt" v-if="orderSummary && orderSummary.order_id" @click="printReceipt">
                 <i class="material-icons">receipt</i>
                 Print Receipt
               </button>
@@ -509,7 +509,7 @@
     </transition>
     <div v-if="toast"
          :class="['toast', `toast-${toast.type}`]"
-         style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+         style="position: fixed; top: 20px; right: 20px; z-index: 1000; display: none">
       {{ toast.message }}
     </div>
 
@@ -1007,7 +1007,7 @@ getProductImageUrl(product) {
 
         // Process successful order
         const orderResponse = await response.json();
-
+        console.log("Order response:", orderResponse);
         // Store order summary for receipt
         this.orderSummary = {
           cart: [...this.cart],
@@ -1015,8 +1015,9 @@ getProductImageUrl(product) {
           tax: this.calculateTax(),
           discount: this.calculateDiscountAmount(),
           total: this.calculateTotal(),
-          order_id: orderResponse.id
+          order_id: orderResponse.order_id || orderResponse.order?.id
         };
+
 
 
         // Show success modal
@@ -1035,8 +1036,9 @@ getProductImageUrl(product) {
     },
     async printReceipt() {
   console.log('Print Receipt button clicked');
-  if (!this.orderSummary?.order_id) {
+ if (!this.orderSummary || !this.orderSummary.order_id) {
     console.error('Order ID not found');
+    this.showToast('Receipt Error', 'No completed order found to print.', 'error');
     return;
   }
 
