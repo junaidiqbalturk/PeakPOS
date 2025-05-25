@@ -1008,6 +1008,7 @@ getProductImageUrl(product) {
         // Process successful order
         const orderResponse = await response.json();
         console.log("Order response:", orderResponse);
+        const order_id = orderResponse.order_id || orderResponse.order?.id;
         // Store order summary for receipt
         this.orderSummary = {
           cart: [...this.cart],
@@ -1015,10 +1016,26 @@ getProductImageUrl(product) {
           tax: this.calculateTax(),
           discount: this.calculateDiscountAmount(),
           total: this.calculateTotal(),
-          order_id: orderResponse.order_id || orderResponse.order?.id
+          order_id: order_id
         };
+        // After order completion status Receipt generation
+        const receiptResponse = await fetch('http://127.0.0.1:5000/api/receipts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`  // Including JWT Token
+          },
+          body: JSON.stringify({order_id: order_id})
+        });
 
-
+        if(!receiptResponse.ok){
+          throw new Error("Failed to generate receipt");
+        } else{
+          const receiptData = await receiptResponse.json();
+          console.log("Receipt created successfully");
+          console.log("Receipt Data:", receiptData);
+          this.receiptData = receiptData;
+        }
 
         // Show success modal
         this.showOrderComplete = true;

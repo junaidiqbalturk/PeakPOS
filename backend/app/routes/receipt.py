@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
-from app.models import db, receipt, Order, User
+from app.models import db, Order, User
 from flask_jwt_extended import jwt_required, get_jwt_identity
+
+from app.models.receipt import Receipt
 
 receipt_bp = Blueprint("receipt", __name__, url_prefix="/api/receipts")
 
-@receipt_bp.route("/", methods=["POST"])
+@receipt_bp.route("/receipts", methods=["POST"])
 @jwt_required()
 def create_receipt():
     data = request.get_json()
@@ -31,7 +33,7 @@ def create_receipt():
     return jsonify({"message": "Receipt created successfully","Receipt ID": receipt.id}), 201
 
 
-@receipt_bp.route('/<int:order_id>', methods=['GET'])
+@receipt_bp.route('/receipts/<int:order_id>', methods=['GET'])
 @jwt_required()
 def get_receipt_by_order(order_id):
     receipt = Receipt.query.filter_by(order_id=order_id).first()
