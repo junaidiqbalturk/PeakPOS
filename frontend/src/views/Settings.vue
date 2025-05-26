@@ -561,7 +561,7 @@
           </div>
 
           <!-- Receipt Settings Section -->
-          <div v-if="activeSection === 'receipt'" class="settings-section">
+          <div v-if="activeSection === 'receipt'" class="settings-section" @click="activeSection='loadReceiptSettings'">
             <div class="section-header">
               <div class="section-icon">
                 <i class="material-icons">receipt</i>
@@ -792,6 +792,31 @@
       </div>
     </main>
   </div>
+  <!-- Receipt Preview Modal -->
+<div v-if="showPreview" class="receipt-preview-overlay">
+  <div class="receipt-preview">
+    <div class="receipt-paper" :class="receiptSettings.paperSize">
+      <div class="receipt-header" v-if="receiptSettings.showLogo">
+        <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="receipt-logo" />
+      </div>
+      <div class="receipt-header-text">{{ receiptSettings.header }}</div>
+
+      <div class="receipt-body">
+        <p><strong>Date:</strong> {{ new Date().toLocaleString() }}</p>
+        <p><strong>Sample Product:</strong> Laptop XYZ</p>
+        <p><strong>Quantity:</strong> 1</p>
+        <p><strong>Price:</strong> $1000</p>
+        <p><strong>Total:</strong> $1000</p>
+      </div>
+
+      <div class="receipt-footer-text">{{ receiptSettings.footer }}</div>
+    </div>
+    <div class="modal-actions">
+      <button @click="printPreview">Print</button>
+      <button @click="closePreview">Close</button>
+    </div>
+  </div>
+</div>
 </template>
 
 <script>
@@ -799,6 +824,8 @@ export default {
   name: 'SettingsView',
   data() {
     return {
+      showPreview: false, //REceipt Preview
+       logoUrl: '', // Will be set if a logo is uploaded
       // Navigation and layout data
       isDarkMode: localStorage.getItem('darkMode') === 'true',
       isSidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
@@ -810,6 +837,16 @@ export default {
         day: 'numeric'
       }),
       searchQuery: '',
+      //Receipt Settings
+      receiptSettings: {
+        header: '',
+        footer: '',
+        showLogo: true,
+        showCashier: true,
+        showTaxBreakdown: true,
+        showBarcode: true,
+        paperSize: '80mm'
+      },
 
       // Settings sections
       activeSection: 'store',
@@ -863,7 +900,7 @@ export default {
       },
 
       // Receipt settings
-      receiptSettings: {
+      receiptSettingss: {
         header: 'Thank you for shopping with us!',
         footer: 'Please come again soon',
         showLogo: true,
@@ -904,6 +941,26 @@ export default {
   },
 
   methods: {
+    // Receipt Settings
+    async loadReceiptSettings() {
+      try{
+        const response = await fetch('/api/receipt-settings');
+        if(!response.ok) throw new Error('Failed to Fetch Settings');
+
+        const data = await response.json();
+        this.receiptSettings.header = data.header_text || '';
+        this.receiptSettings.footer = data.footer_text || '';
+        this.receiptSettings.showLogo = true; //default
+        this.receiptSettings.showCashier = true;
+        this.receiptSettings.showTaxBreakdown = true;
+        this.receiptSettings.showBarcode = true;
+        this.receiptSettings.paperSize = '80mm';
+      } catch(err){
+        console.error("Error Loading Receipt Settings",err);
+      }
+    },
+    //Save Receipt Settings
+
     // Navigation methods
     toggleSidebar() {
       this.isSidebarCollapsed = !this.isSidebarCollapsed;
@@ -998,15 +1055,57 @@ export default {
     },
 
     // Receipt methods
-    saveReceiptSettings() {
-      // Save receipt settings API call would go here
-      this.showToastMessage('Receipt settings saved successfully');
-    },
+    async saveReceiptSettings() {
+    try {
+      const response = await fetch('/api/receipt-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          header_text: this.receiptSettings.header,
+          footer_text: this.receiptSettings.footer,
+          // Phase 1 doesn't persist checkboxes and paperSize yet; include them in Phase 2.
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to save settings');
+
+     // const result = await response.json();
+      alert('Receipt settings saved successfully');
+    } catch (err) {
+      console.error('Error saving receipt settings:', err);
+    }
+  },
+    async uploadLogo(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('logo', file);
+
+  try {
+    const response = await fetch('/api/receipt-settings/logo', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error('Failed to upload logo');
+    const result = await response.json();
+    alert('Logo uploaded: ' + result.filename);
+  } catch (err) {
+    console.error('Logo upload error:', err);
+  }
+},
 
     previewReceipt() {
-      // Logic to show receipt preview would go here
-      alert('Receipt preview functionality would be implemented here');
-    },
+    // Set logo URL if available
+    this.logoUrl = '/static/logo.png'; // Change path based on your setup
+    this.showPreview = true;
+  },
+    closePreview() {
+    this.showPreview = false;
+  },
 
     // System settings methods
     saveSystemSettings() {
@@ -1086,6 +1185,48 @@ export default {
 </script>
 
 <style scoped>
+/* Receipt Modal CSS */
+.receipt-preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+.receipt-preview {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+}
+.receipt-paper.80mm {
+  width: 80mm;
+}
+.receipt-paper.58mm {
+  width: 58mm;
+}
+.receipt-paper.a4 {
+  width: 210mm;
+}
+.receipt-logo {
+  display: block;
+  max-height: 60px;
+  margin: 0 auto;
+}
+.modal-actions {
+  text-align: center;
+  margin-top: 20px;
+}
+.modal-actions button {
+  margin: 0 10px;
+}
+/* Ends here */
 /* Main Layout Styles */
 .dashboard-app {
   display: flex;
