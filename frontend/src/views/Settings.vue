@@ -561,7 +561,7 @@
           </div>
 
           <!-- Receipt Settings Section -->
-          <div v-if="activeSection === 'receipt'" class="settings-section" @click="activeSection='loadReceiptSettings'">
+          <div v-if="activeSection === 'receipt'" class="settings-section" @click="switchToReceipt()">
             <div class="section-header">
               <div class="section-icon">
                 <i class="material-icons">receipt</i>
@@ -942,6 +942,10 @@ export default {
 
   methods: {
     // Receipt Settings
+    switchToReceipt() {
+    this.activeSection = 'receipt';
+    this.loadReceiptSettings();
+  },
     async loadReceiptSettings() {
       try{
         const response = await fetch('/api/receipt-settings');
