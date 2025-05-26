@@ -1099,151 +1099,483 @@ getProductImageUrl(product) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Receipt #${receipt.receipt_id}</title>
+  <title>Receipt #${receipt.receipt_id} - PeakPOS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f8f9fa;
-      color: #333;
-      padding: 20px;
-      margin: 0;
+      font-family: 'Courier New', 'Liberation Mono', monospace;
+      background: #f5f5f5;
+      color: #000;
+      padding: 10px;
+      line-height: 1.2;
+      font-size: 12px;
+    }
+
+    .receipt-wrapper {
+      max-width: 80mm; /* 302px at 96dpi */
+      width: 302px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: relative;
     }
 
     .receipt-container {
-      max-width: 600px;
-      margin: auto;
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      padding: 8px;
+      background: white;
+      min-height: auto;
     }
 
+    /* Header Section */
     .receipt-header {
       text-align: center;
-      margin-bottom: 30px;
+      border-bottom: 1px dashed #000;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
     }
 
-    .receipt-header h1 {
-      margin: 0;
-      font-size: 1.8rem;
-      color: #4a4a4a;
-    }
-
-    .receipt-meta {
-      text-align: center;
-      font-size: 0.9rem;
-      color: #888;
-      margin-bottom: 20px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 30px;
-    }
-
-    th, td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #eee;
-    }
-
-    th {
-      background-color: #f1f1f1;
-      font-weight: 600;
-    }
-
-    tfoot td {
+    .store-logo {
+      font-size: 20px;
       font-weight: bold;
+      margin-bottom: 4px;
     }
 
-    .totals {
-      margin-top: 10px;
+    .store-name {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 2px;
     }
 
-    .totals td {
-      text-align: right;
+    .store-address {
+      font-size: 10px;
+      margin-bottom: 4px;
     }
 
-    .footer {
+    .store-contact {
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    /* Receipt Info */
+    .receipt-info {
+      margin-bottom: 8px;
+      font-size: 10px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .receipt-id {
       text-align: center;
-      font-size: 0.85rem;
-      color: #999;
-      margin-top: 30px;
+      font-weight: bold;
+      margin: 4px 0;
+      font-size: 12px;
+      border-top: 1px dashed #000;
+      border-bottom: 1px dashed #000;
+      padding: 4px 0;
     }
 
+    /* Items Section */
+    .items-header {
+      border-bottom: 1px solid #000;
+      padding-bottom: 2px;
+      margin-bottom: 4px;
+      font-weight: bold;
+      font-size: 10px;
+    }
+
+    .items-list {
+      margin-bottom: 8px;
+    }
+
+    .item-row {
+      margin-bottom: 4px;
+      font-size: 10px;
+    }
+
+    .item-name {
+      font-weight: bold;
+      margin-bottom: 1px;
+    }
+
+    .item-details {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+    }
+
+    .item-qty-price {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+    }
+
+    /* Totals Section */
+    .totals-section {
+      border-top: 1px dashed #000;
+      padding-top: 4px;
+      margin-top: 8px;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2px;
+      font-size: 11px;
+    }
+
+    .total-row.final {
+      border-top: 1px solid #000;
+      border-bottom: 1px solid #000;
+      padding: 4px 0;
+      margin: 4px 0;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .discount-row {
+      color: #000;
+    }
+
+    /* Payment Info */
+    .payment-info {
+      margin: 8px 0;
+      text-align: center;
+      font-size: 10px;
+      border-top: 1px dashed #000;
+      border-bottom: 1px dashed #000;
+      padding: 4px 0;
+    }
+
+    /* Footer */
+    .receipt-footer {
+      text-align: center;
+      margin-top: 8px;
+      font-size: 9px;
+    }
+
+    .thank-you {
+      font-weight: bold;
+      margin-bottom: 4px;
+      font-size: 11px;
+    }
+
+    .footer-message {
+      margin-bottom: 6px;
+    }
+
+    .return-policy {
+      font-size: 8px;
+      margin-bottom: 6px;
+      border-top: 1px dashed #000;
+      padding-top: 4px;
+    }
+
+    /* Barcode */
+    .barcode-section {
+      text-align: center;
+      margin: 8px 0;
+    }
+
+    .barcode {
+      height: 30px;
+      background: repeating-linear-gradient(
+        90deg,
+        #000,
+        #000 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      margin-bottom: 4px;
+      width: 100%;
+    }
+
+    .barcode-text {
+      font-size: 8px;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* Print Actions - Hidden in print */
+    .print-actions {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: flex;
+      gap: 8px;
+    }
+
+    .print-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .print-btn.primary {
+      background: #007bff;
+      color: white;
+    }
+
+    .print-btn.secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .print-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* Print Styles */
     @media print {
       body {
         background: white;
         padding: 0;
       }
 
-      .receipt-container {
+      .receipt-wrapper {
+        max-width: none;
+        width: 80mm;
+        margin: 0;
         box-shadow: none;
-        padding: 0;
+      }
+
+      .receipt-container {
+        padding: 4mm;
+      }
+
+      .print-actions {
+        display: none;
+      }
+
+      /* Ensure black text for thermal printers */
+      * {
+        color: #000 !important;
+        background: white !important;
+      }
+
+      .barcode {
+        background: repeating-linear-gradient(
+          90deg,
+          #000,
+          #000 1px,
+          white 1px,
+          white 2px
+        ) !important;
+      }
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 400px) {
+      .receipt-wrapper {
+        width: 100%;
+        max-width: 100%;
         margin: 0;
       }
 
-      .footer {
-        display: none;
+      .print-actions {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        position: fixed;
+        justify-content: center;
       }
+    }
+
+    /* 58mm variant */
+    @media (max-width: 250px) {
+      .receipt-wrapper {
+        width: 58mm; /* 219px at 96dpi */
+        max-width: 219px;
+      }
+
+      .store-name {
+        font-size: 14px;
+      }
+
+      .item-details {
+        flex-direction: column;
+      }
+    }
+
+    /* Animation for modern feel */
+    .receipt-container {
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Dotted separators */
+    .separator {
+      text-align: center;
+      margin: 4px 0;
+      font-size: 8px;
+      letter-spacing: 2px;
+    }
+
+    /* Receipt tape edge effect */
+    .receipt-wrapper::before,
+    .receipt-wrapper::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.1) 3px,
+        rgba(0,0,0,0.1) 6px
+      );
+    }
+
+    .receipt-wrapper::before {
+      top: -4px;
+    }
+
+    .receipt-wrapper::after {
+      bottom: -4px;
     }
   </style>
 </head>
 <body>
-  <div class="receipt-container">
-    <div class="receipt-header">
-      <h1>Order Receipt</h1>
-    </div>
-    <div class="receipt-meta">
-      <p><strong>Receipt ID:</strong> ${receipt.receipt_id}</p>
-      <p><strong>Date:</strong> ${new Date(receipt.created_at).toLocaleString()}</p>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Product</th>
-          <th>Qty</th>
-          <th>Price</th>
-        </tr>
-      </thead>
-      <tbody>
+  <div class="receipt-wrapper">
+    <div class="receipt-container">
+      <!-- Header -->
+      <div class="receipt-header">
+        <div class="store-logo">★ PEAKPOS ★</div>
+        <div class="store-name">PeakPOS Store</div>
+        <div class="store-address">123 Commerce Street<br>Business District, City 12345</div>
+        <div class="store-contact">Tel: (555) 123-4567<br>www.peakpos.com</div>
+      </div>
+
+      <!-- Receipt Info -->
+      <div class="receipt-info">
+        <div class="info-row">
+          <span>Date:</span>
+          <span>${new Date(receipt.created_at).toLocaleDateString()}</span>
+        </div>
+        <div class="info-row">
+          <span>Time:</span>
+          <span>${new Date(receipt.created_at).toLocaleTimeString()}</span>
+        </div>
+        <div class="info-row">
+          <span>Cashier:</span>
+          <span>${receipt.cashier_name || 'Admin'}</span>
+        </div>
+      </div>
+
+      <div class="receipt-id">Receipt #${receipt.receipt_id}</div>
+
+      <!-- Items -->
+      <div class="items-header">ITEMS PURCHASED</div>
+
+      <div class="items-list">
         ${receipt.snapshot.items.map(item => `
-          <tr>
-            <td>${item.name}</td>
-            <td>${item.quantity}</td>
-            <td>${item.price.toFixed(2)}</td>
-          </tr>
+          <div class="item-row">
+            <div class="item-name">${item.name}</div>
+            <div class="item-qty-price">
+              <span>${item.quantity} x $${(item.price / item.quantity).toFixed(2)}</span>
+              <span>$${item.price.toFixed(2)}</span>
+            </div>
+          </div>
         `).join('')}
-      </tbody>
-      <tfoot>
-        <tr>
-          <td colspan="2">Subtotal</td>
-          <td>${receipt.snapshot.subtotal.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td colspan="2">Tax</td>
-          <td>${receipt.snapshot.tax.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td colspan="2">Discount</td>
-          <td>${receipt.snapshot.discount.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td colspan="2">Total</td>
-          <td>${receipt.snapshot.total.toFixed(2)}</td>
-        </tr>
-      </tfoot>
-    </table>
-    <div class="footer">
-      <p>Thank you for your purchase!</p>
-      <p>POS System by PeakPOS</p>
+      </div>
+
+      <!-- Totals -->
+      <div class="totals-section">
+        <div class="total-row">
+          <span>Subtotal:</span>
+          <span>$${receipt.snapshot.subtotal.toFixed(2)}</span>
+        </div>
+
+        ${receipt.snapshot.tax > 0 ? `
+        <div class="total-row">
+          <span>Tax:</span>
+          <span>$${receipt.snapshot.tax.toFixed(2)}</span>
+        </div>
+        ` : ''}
+
+        ${receipt.snapshot.discount > 0 ? `
+        <div class="total-row discount-row">
+          <span>Discount:</span>
+          <span>-$${receipt.snapshot.discount.toFixed(2)}</span>
+        </div>
+        ` : ''}
+
+        <div class="total-row final">
+          <span>TOTAL:</span>
+          <span>$${receipt.snapshot.total.toFixed(2)}</span>
+        </div>
+      </div>
+
+      <!-- Payment Info -->
+      <div class="payment-info">
+        <div>Payment Method: ${receipt.payment_method || 'Cash'}</div>
+        ${receipt.payment_method === 'Cash' ? `
+        <div>Cash Received: $${(receipt.snapshot.total + (receipt.change || 0)).toFixed(2)}</div>
+        <div>Change: $${(receipt.change || 0).toFixed(2)}</div>
+        ` : ''}
+      </div>
+
+      <!-- Barcode -->
+      <div class="barcode-section">
+        <div class="barcode"></div>
+        <div class="barcode-text">${receipt.receipt_id}</div>
+      </div>
+
+      <!-- Footer -->
+      <div class="receipt-footer">
+        <div class="thank-you">THANK YOU!</div>
+        <div class="footer-message">Thank you for shopping with us!<br>Have a great day!</div>
+
+        <div class="separator">• • • • • • • • • • • • • • • •</div>
+
+        <div class="return-policy">
+          Items can be returned within 30 days<br>
+          with original receipt.<br>
+          Visit www.peakpos.com for support
+        </div>
+
+        <div class="separator">• • • • • • • • • • • • • • • •</div>
+
+        <div style="font-size: 8px; margin-top: 4px;">
+          Powered by PeakPOS v2.0<br>
+          ${new Date().toISOString()}
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Print Actions -->
+  <div class="print-actions">
+    <button class="print-btn primary" onclick="printReceipt()">🖨️ Print</button>
+    <button class="print-btn secondary" onclick="downloadReceipt()">📄 PDF</button>
+    <button class="print-btn secondary" onclick="emailReceipt()">📧 Email</button>
   </div>
 </body>
 </html>
@@ -1259,7 +1591,7 @@ getProductImageUrl(product) {
       setTimeout(() => {
         win.focus();
         win.print();
-        win.close();
+       // win.close();
       },500);
     };
   } catch (error) {

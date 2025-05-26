@@ -4,12 +4,12 @@ from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
 import os
 from app import db
-from models.receipt_settings import ReceiptSettings
+from app.models.receipt_settings import ReceiptSettings
 
 receipt_settings_bp = Blueprint('receipt_settings_bp', __name__)
 UPLOAD_FOLDER = 'static/receipt_logos/'
 
-@receipt_settings_bp.route('/api/receipt-settings', methods=['GET'])
+@receipt_settings_bp.route('/receipt-settings', methods=['GET'])
 def get_settings():
     settings = db.session.query(ReceiptSettings).first()
     if not settings:
@@ -22,7 +22,7 @@ def get_settings():
         'logo_filename': settings.logo_filename
     })
 
-@receipt_settings_bp.route('/api/receipt-settings', methods=['POST'])
+@receipt_settings_bp.route('/receipt-settings', methods=['POST'])
 def update_settings():
     data = request.json
     settings = db.session.query(ReceiptSettings).first()
@@ -38,7 +38,7 @@ def update_settings():
 
     return jsonify({'message': 'Settings updated successfully'})
 
-@receipt_settings_bp.route('/api/receipt-settings/logo', methods=['POST'])
+@receipt_settings_bp.route('/receipt-settings/logo', methods=['POST'])
 def upload_logo():
     file = request.files['logo']
     if file:
