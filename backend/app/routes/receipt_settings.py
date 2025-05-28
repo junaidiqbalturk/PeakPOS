@@ -1,13 +1,14 @@
 # routes/receipt_settings.py
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
 import os
-from app import db
+from app import db, app
+import logging
 from app.models.receipt_settings import ReceiptSettings
 
 receipt_settings_bp = Blueprint('receipt_settings_bp', __name__)
-UPLOAD_FOLDER = 'static/receipt_logos/'
+# UPLOAD_FOLDER = 'static/receipt_logos'
 
 @receipt_settings_bp.route('/receipt-settings', methods=['GET'])
 def get_settings():
@@ -40,18 +41,31 @@ def update_settings():
 
 @receipt_settings_bp.route('/receipt-settings/logo', methods=['POST'])
 def upload_logo():
-    file = request.files['logo']
-    if file:
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(UPLOAD_FOLDER, filename))
+    if 'file' not in request.files:
+        logging.basicConfig(level=logging.DEBUG)
+        return jsonify({"error": "No file part"}), 400
 
-        settings = db.session.query(ReceiptSettings).first()
-        if not settings:
-            settings = ReceiptSettings()
+    file = request.files['file']
+    if file.filename == '':
+        logging.basicConfig(level=logging.DEBUG)
+        return jsonify({"error": "No selected file"}), 400
 
-        settings.logo_filename = filename
+    # Use absolute path
+    upload_folder = os.path.join(current_app.root_path, 'static', 'receipt_logos')
+    os.makedirs(upload_folder, exist_ok=True)
+
+    filename = secure_filename(file.filename)
+    file_path = os.path.join(upload_folder, filename)
+
+    file.save(file_path)
+
+    # ✅ Save filename in DB
+    settings = ReceiptSettings.query.first()
+    if not settings:
+        settings = ReceiptSettings()
         db.session.add(settings)
-        db.session.commit()
 
-        return jsonify({'message': 'Logo uploaded successfully', 'filename': filename})
-    return jsonify({'error': 'No file uploaded'}), 400
+    settings.logo_filename = filename
+    db.session.commit()
+
+    return jsonify({"message": "Logo uploaded successfully", "filename": filename}), 200

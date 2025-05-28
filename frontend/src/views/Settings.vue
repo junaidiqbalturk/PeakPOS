@@ -156,7 +156,7 @@
         </div>
       </header>
 
-      <div class="settings-management">
+      <div class="settings-container">
         <!-- Dashboard Summary -->
         <div class="dashboard-summary">
           <div class="welcome-message">
@@ -165,128 +165,30 @@
           </div>
         </div>
 
-        <!-- Modern Metrics Grid with Animated 3D Cards - Settings Summary -->
-        <div class="metrics-grid">
-          <!-- Store Profile Card -->
-          <div class="metric-card store" :style="{ '--delay': '0.1s' }">
-            <div class="metric-card-inner">
-              <div class="metric-icon-container">
-                <div class="metric-icon">
-                  <i class="material-icons">store</i>
-                </div>
-                <div class="metric-trend positive">
-                  <i class="material-icons trend-icon">settings</i>
-                </div>
-              </div>
-              <div class="metric-content">
-                <div class="metric-label">Store Profile</div>
-                <div class="metric-value">
-                  <span class="value-text">{{ storeSettings.name || 'Your Store' }}</span>
-                </div>
-                <div class="metric-action">
-                  <button @click="activeSection = 'store'" class="btn-configure">
-                    Configure <i class="material-icons">arrow_forward</i>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Interactive hover effect elements -->
-              <div class="metric-card-backdrop"></div>
-              <div class="metric-card-glow"></div>
-            </div>
-          </div>
-
-          <!-- Discount Management Card -->
-          <div class="metric-card discount" :style="{ '--delay': '0.2s' }">
-            <div class="metric-card-inner">
-              <div class="metric-icon-container">
-                <div class="metric-icon">
-                  <i class="material-icons">local_offer</i>
-                </div>
-                <div class="metric-trend positive">
-                  <i class="material-icons trend-icon">percent</i>
-                  <span class="trend-value">{{ discountStats.total }}</span>
-                </div>
-              </div>
-              <div class="metric-content">
-                <div class="metric-label">Discount Management</div>
-                <div class="metric-value">
-                  <span class="value-number">{{ discountStats.active }}</span>
-                  <span class="value-label">Active Discounts</span>
-                </div>
-                <div class="metric-action">
-                  <button @click="activeSection = 'discounts'" class="btn-configure">
-                    Configure <i class="material-icons">arrow_forward</i>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Interactive hover effect elements -->
-              <div class="metric-card-backdrop"></div>
-              <div class="metric-card-glow"></div>
-            </div>
-          </div>
-
-          <!-- Currency Settings Card -->
-          <div class="metric-card currency" :style="{ '--delay': '0.3s' }">
-            <div class="metric-card-inner">
-              <div class="metric-icon-container">
-                <div class="metric-icon success">
-                  <i class="material-icons">payments</i>
-                </div>
-                <div class="metric-trend positive">
-                  <i class="material-icons trend-icon">currency_exchange</i>
-                </div>
-              </div>
-              <div class="metric-content">
-                <div class="metric-label">Currency Settings</div>
-                <div class="metric-value">
-                  <span class="value-text">{{ getCurrencySymbol(currencySettings.currency) }} {{ currencySettings.currency }}</span>
-                </div>
-                <div class="metric-action">
-                  <button @click="activeSection = 'currency'" class="btn-configure">
-                    Configure <i class="material-icons">arrow_forward</i>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Interactive hover effect elements -->
-              <div class="metric-card-backdrop"></div>
-              <div class="metric-card-glow"></div>
-            </div>
-          </div>
-        </div>
-
         <!-- Settings Navigation -->
-        <div class="filter-section">
-          <div class="filter-header">
-            <h3>Settings</h3>
-          </div>
-          <div class="filters-row settings-nav">
-            <button
-              v-for="(section, index) in settingsSections"
-              :key="index"
-              @click="activeSection = section.id"
-              :class="['settings-nav-btn', { active: activeSection === section.id }]"
-            >
-              <i class="material-icons">{{ section.icon }}</i>
-              <span>{{ section.name }}</span>
-            </button>
-          </div>
+        <div class="settings-nav">
+          <button
+            v-for="(section, index) in settingsSections"
+            :key="index"
+            @click="activeSection = section.id"
+            :class="['settings-nav-btn', { active: activeSection === section.id }]"
+          >
+            <i class="material-icons">{{ section.icon }}</i>
+            <span>{{ section.name }}</span>
+          </button>
         </div>
 
-        <!-- Settings Content Sections -->
-        <div class="settings-content">
-          <!-- Store Profile Section -->
-          <div v-if="activeSection === 'store'" class="settings-section">
-            <div class="section-header">
-              <div class="section-icon">
+        <!-- Settings Cards Grid -->
+        <div class="settings-cards">
+          <!-- Store Profile Card -->
+          <div v-if="activeSection === 'store' || activeSection === 'all'" class="settings-card store-profile">
+            <div class="settings-card-header">
+              <div class="settings-card-icon">
                 <i class="material-icons">store</i>
               </div>
               <h3>Store Profile</h3>
             </div>
-
-            <div class="settings-panel">
+            <div class="settings-card-content">
               <div class="store-preview">
                 <div class="store-logo">
                   <img v-if="storeSettings.logoUrl" :src="storeSettings.logoUrl" alt="Store Logo" />
@@ -299,135 +201,48 @@
                   <p>{{ storeSettings.address || 'Store Address' }}</p>
                 </div>
               </div>
-
               <div class="form-group">
                 <label>Store Name</label>
                 <input type="text" v-model="storeSettings.name" placeholder="Enter store name" />
               </div>
-
               <div class="form-group">
                 <label>Store Address</label>
                 <textarea v-model="storeSettings.address" placeholder="Enter store address" rows="2"></textarea>
               </div>
-
               <div class="form-group">
                 <label>Contact Phone</label>
                 <input type="tel" v-model="storeSettings.phone" placeholder="Enter contact phone" />
               </div>
-
               <div class="form-group">
                 <label>Contact Email</label>
                 <input type="email" v-model="storeSettings.email" placeholder="Enter contact email" />
               </div>
-
               <div class="form-group">
                 <label>Logo</label>
                 <div class="file-upload">
-                  <input type="file" id="logo-upload" @change="handleLogoUpload" accept="image/*" />
+                  <input type="file" id="logo-upload" @change="handleStoreLogoUpload" accept="image/*" />
                   <label for="logo-upload" class="upload-btn">
                     <i class="material-icons">cloud_upload</i> Upload Logo
                   </label>
                 </div>
               </div>
-
-              <div class="form-actions">
-                <button class="btn-save" @click="saveStoreSettings">
-                  <i class="material-icons">save</i> Save Changes
-                </button>
-              </div>
+            </div>
+            <div class="settings-card-footer">
+              <button class="btn-save" @click="saveStoreSettings">
+                <i class="material-icons">save</i> Save Changes
+              </button>
             </div>
           </div>
 
-          <!-- Discount Management Section -->
-          <div v-if="activeSection === 'discounts'" class="settings-section">
-            <div class="section-header">
-              <div class="section-icon">
-                <i class="material-icons">local_offer</i>
-              </div>
-              <h3>Discount Management</h3>
-            </div>
-
-            <div class="settings-panel">
-              <div class="discount-stats">
-                <div class="stat-card">
-                  <div class="stat-icon">
-                    <i class="material-icons">local_offer</i>
-                  </div>
-                  <div class="stat-info">
-                    <h4>{{ discountStats.total }}</h4>
-                    <p>Total Discounts</p>
-                  </div>
-                </div>
-
-                <div class="stat-card">
-                  <div class="stat-icon active">
-                    <i class="material-icons">check_circle</i>
-                  </div>
-                  <div class="stat-info">
-                    <h4>{{ discountStats.active }}</h4>
-                    <p>Active Discounts</p>
-                  </div>
-                </div>
-
-                <div class="stat-card">
-                  <div class="stat-icon inactive">
-                    <i class="material-icons">cancel</i>
-                  </div>
-                  <div class="stat-info">
-                    <h4>{{ discountStats.inactive }}</h4>
-                    <p>Inactive Discounts</p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="discount-list">
-                <h4 class="sub-heading">Recent Discounts</h4>
-                <table v-if="discounts.length > 0">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Type</th>
-                      <th>Value</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="discount in discounts" :key="discount.id">
-                      <td>{{ discount.name }}</td>
-                      <td>{{ discount.discount_type === 'percentage' ? 'Percentage' : 'Fixed' }}</td>
-                      <td>{{ discount.discount_type === 'percentage' ? discount.value + '%' : '$' + discount.value.toFixed(2) }}</td>
-                      <td>
-                        <span :class="['status-badge', discount.active ? 'active' : 'inactive']">
-                          {{ discount.active ? 'Active' : 'Inactive' }}
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div v-else class="no-data-message">
-                  <i class="material-icons">local_offer</i>
-                  <p>No discounts created yet</p>
-                </div>
-              </div>
-
-              <div class="form-actions">
-                <router-link to="/discounts" class="btn-primary">
-                  <i class="material-icons">settings</i> Manage Discounts
-                </router-link>
-              </div>
-            </div>
-          </div>
-
-          <!-- Currency Settings Section -->
-          <div v-if="activeSection === 'currency'" class="settings-section">
-            <div class="section-header">
-              <div class="section-icon">
+          <!-- Currency Settings Card -->
+          <div v-if="activeSection === 'currency' || activeSection === 'all'" class="settings-card currency-settings">
+            <div class="settings-card-header">
+              <div class="settings-card-icon">
                 <i class="material-icons">payments</i>
               </div>
               <h3>Currency Settings</h3>
             </div>
-
-            <div class="settings-panel">
+            <div class="settings-card-content">
               <div class="form-group">
                 <label>Currency</label>
                 <select v-model="currencySettings.currency">
@@ -490,25 +305,23 @@
                   {{ formatCurrencyPreview(1234.56) }}
                 </div>
               </div>
-
-              <div class="form-actions">
-                <button class="btn-save" @click="saveCurrencySettings">
-                  <i class="material-icons">save</i> Save Changes
-                </button>
-              </div>
+            </div>
+            <div class="settings-card-footer">
+              <button class="btn-save" @click="saveCurrencySettings">
+                <i class="material-icons">save</i> Save Changes
+              </button>
             </div>
           </div>
 
-          <!-- Tax Settings Section -->
-          <div v-if="activeSection === 'taxes'" class="settings-section">
-            <div class="section-header">
-              <div class="section-icon">
+          <!-- Tax Settings Card -->
+          <div v-if="activeSection === 'taxes' || activeSection === 'all'" class="settings-card tax-settings">
+            <div class="settings-card-header">
+              <div class="settings-card-icon">
                 <i class="material-icons">account_balance</i>
               </div>
               <h3>Tax Settings</h3>
             </div>
-
-            <div class="settings-panel">
+            <div class="settings-card-content">
               <div class="form-group">
                 <label class="checkbox-container">
                   <input type="checkbox" v-model="taxSettings.enableTax" />
@@ -551,96 +364,195 @@
                   </label>
                 </div>
               </div>
-
-              <div class="form-actions">
-                <button class="btn-save" @click="saveTaxSettings">
-                  <i class="material-icons">save</i> Save Changes
-                </button>
-              </div>
+            </div>
+            <div class="settings-card-footer">
+              <button class="btn-save" @click="saveTaxSettings">
+                <i class="material-icons">save</i> Save Changes
+              </button>
             </div>
           </div>
 
-          <!-- Receipt Settings Section -->
-          <div v-if="activeSection === 'receipt'" class="settings-section" @click="switchToReceipt()">
-            <div class="section-header">
-              <div class="section-icon">
+          <!-- Discounts Management Card -->
+          <div v-if="activeSection === 'discounts' || activeSection === 'all'" class="settings-card discounts-settings">
+            <div class="settings-card-header">
+              <div class="settings-card-icon">
+                <i class="material-icons">local_offer</i>
+              </div>
+              <h3>Discounts Management</h3>
+            </div>
+            <div class="settings-card-content">
+              <div class="discount-stats">
+                <div class="stat-item">
+                  <div class="stat-icon">
+                    <i class="material-icons">local_offer</i>
+                  </div>
+                  <div class="stat-info">
+                    <h4>{{ discountStats.total }}</h4>
+                    <p>Total Discounts</p>
+                  </div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-icon active">
+                    <i class="material-icons">check_circle</i>
+                  </div>
+                  <div class="stat-info">
+                    <h4>{{ discountStats.active }}</h4>
+                    <p>Active Discounts</p>
+                  </div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-icon inactive">
+                    <i class="material-icons">block</i>
+                  </div>
+                  <div class="stat-info">
+                    <h4>{{ discountStats.inactive }}</h4>
+                    <p>Inactive Discounts</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="discount-list-preview">
+                <h4>Recent Discounts</h4>
+                <table v-if="discounts.length > 0">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Value</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="discount in discounts.slice(0, 3)" :key="discount.id">
+                      <td>{{ discount.name }}</td>
+                      <td>{{ discount.discount_type === 'percentage' ? 'Percentage' : 'Fixed' }}</td>
+                      <td>{{ discount.discount_type === 'percentage' ? discount.value + '%' : '$' + discount.value.toFixed(2) }}</td>
+                      <td>
+                        <span :class="['status-badge', discount.active ? 'active' : 'inactive']">
+                          {{ discount.active ? 'Active' : 'Inactive' }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div v-else class="no-discounts">
+                  <p>No discounts created yet</p>
+                </div>
+              </div>
+            </div>
+            <div class="settings-card-footer">
+              <router-link to="/discounts" class="btn-manage">
+                <i class="material-icons">settings</i> Manage Discounts
+              </router-link>
+            </div>
+          </div>
+
+          <!-- Receipt Settings Card -->
+          <div v-if="activeSection === 'receipt' || activeSection === 'all'" class="settings-card receipt-settings">
+            <div class="settings-card-header">
+              <div class="settings-card-icon">
                 <i class="material-icons">receipt</i>
               </div>
               <h3>Receipt Settings</h3>
             </div>
-
-            <div class="settings-panel">
-              <div class="form-group">
-                <label>Receipt Header</label>
-                <textarea v-model="receiptSettings.header" placeholder="Enter text to display at the top of receipts" rows="2"></textarea>
+            <div class="settings-card-content">
+              <!-- Loading State -->
+              <div v-if="receiptLoading" class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Loading receipt settings...</p>
               </div>
 
-              <div class="form-group">
-                <label>Receipt Footer</label>
-                <textarea v-model="receiptSettings.footer" placeholder="Enter text to display at the bottom of receipts" rows="2"></textarea>
-              </div>
+              <!-- Receipt Settings Form -->
+              <div v-else>
+                <div class="form-group">
+                  <label>Business Name</label>
+                  <input
+                    type="text"
+                    v-model="receiptSettings.business_name"
+                    placeholder="Enter your business name"
+                  />
+                </div>
 
-              <div class="form-group">
-                <label>Show on Receipt</label>
-                <div class="checkbox-group">
-                  <label class="checkbox-container">
-                    <input type="checkbox" v-model="receiptSettings.showLogo" />
-                    <span class="checkmark"></span>
-                    Store Logo
-                  </label>
+                <div class="form-group">
+                  <label>Receipt Header Text</label>
+                  <textarea
+                    v-model="receiptSettings.header_text"
+                    placeholder="Enter text to display at the top of receipts"
+                    rows="2"
+                  ></textarea>
+                </div>
 
-                  <label class="checkbox-container">
-                    <input type="checkbox" v-model="receiptSettings.showCashier" />
-                    <span class="checkmark"></span>
-                    Cashier Name
-                  </label>
+                <div class="form-group">
+                  <label>Receipt Footer Text</label>
+                  <textarea
+                    v-model="receiptSettings.footer_text"
+                    placeholder="Enter text to display at the bottom of receipts"
+                    rows="2"
+                  ></textarea>
+                </div>
 
-                  <label class="checkbox-container">
-                    <input type="checkbox" v-model="receiptSettings.showTaxBreakdown" />
-                    <span class="checkmark"></span>
-                    Tax Breakdown
-                  </label>
+                <div class="form-group">
+                  <label>Legal Text</label>
+                  <textarea
+                    v-model="receiptSettings.legal_text"
+                    placeholder="Enter legal text or return policy"
+                    rows="3"
+                  ></textarea>
+                </div>
 
-                  <label class="checkbox-container">
-                    <input type="checkbox" v-model="receiptSettings.showBarcode" />
-                    <span class="checkmark"></span>
-                    Order Barcode
-                  </label>
+                <div class="form-group">
+                  <label>Store Logo</label>
+                  <div class="logo-upload-section">
+                    <div v-if="receiptSettings.logo_filename" class="current-logo">
+                      <img :src="getLogoUrl(receiptSettings.logo_filename)" alt="Store Logo" class="logo-preview">
+                      <button @click="removeLogo" class="remove-logo-btn">
+                        <i class="material-icons">delete</i>
+                      </button>
+                    </div>
+                    <div class="file-upload">
+                      <input
+                        type="file"
+                        id="receipt-logo-upload"
+                        @change="handleLogoUpload"
+                        accept="image/*"
+                        ref="logoInput"
+                      />
+                      <label for="receipt-logo-upload" class="upload-btn">
+                        <i class="material-icons">cloud_upload</i>
+                        {{ receiptSettings.logo_filename ? 'Change Logo' : 'Upload Logo' }}
+                      </label>
+                    </div>
+                    <p class="help-text">Recommended size: 200x100px or smaller. Max file size: 2MB</p>
+                  </div>
                 </div>
               </div>
-
-              <div class="form-group">
-                <label>Paper Size</label>
-                <select v-model="receiptSettings.paperSize">
-                  <option value="80mm">80mm (Standard)</option>
-                  <option value="58mm">58mm (Compact)</option>
-                  <option value="a4">A4 Paper</option>
-                </select>
-              </div>
-
-              <div class="form-actions">
-                <button class="btn-save" @click="saveReceiptSettings">
-                  <i class="material-icons">save</i> Save Changes
-                </button>
-                <button class="btn-secondary" @click="previewReceipt">
-                  <i class="material-icons">visibility</i> Preview
-                </button>
-              </div>
+            </div>
+            <div class="settings-card-footer">
+              <button
+                class="btn-save"
+                @click="saveReceiptSettings"
+                :disabled="receiptSaving"
+              >
+                <i class="material-icons">{{ receiptSaving ? 'hourglass_top' : 'save' }}</i>
+                {{ receiptSaving ? 'Saving...' : 'Save Changes' }}
+              </button>
+              <button class="btn-preview" @click="previewReceipt">
+                <i class="material-icons">visibility</i> Preview
+              </button>
             </div>
           </div>
 
-          <!-- User Management Section -->
-          <div v-if="activeSection === 'users'" class="settings-section">
-            <div class="section-header">
-              <div class="section-icon">
+          <!-- User Management Card -->
+          <div v-if="activeSection === 'users' || activeSection === 'all'" class="settings-card users-settings">
+            <div class="settings-card-header">
+              <div class="settings-card-icon">
                 <i class="material-icons">group</i>
               </div>
               <h3>User Management</h3>
             </div>
-
-            <div class="settings-panel">
+            <div class="settings-card-content">
               <div class="user-stats">
-                <div class="stat-card">
+                <div class="stat-item">
                   <div class="stat-icon">
                     <i class="material-icons">people</i>
                   </div>
@@ -649,8 +561,7 @@
                     <p>Total Users</p>
                   </div>
                 </div>
-
-                <div class="stat-card">
+                <div class="stat-item">
                   <div class="stat-icon admin">
                     <i class="material-icons">admin_panel_settings</i>
                   </div>
@@ -659,8 +570,7 @@
                     <p>Administrators</p>
                   </div>
                 </div>
-
-                <div class="stat-card">
+                <div class="stat-item">
                   <div class="stat-icon cashier">
                     <i class="material-icons">point_of_sale</i>
                   </div>
@@ -671,10 +581,10 @@
                 </div>
               </div>
 
-              <div class="user-list">
-                <h4 class="sub-heading">User Accounts</h4>
-                <div class="user-grid">
-                  <div v-for="user in users" :key="user.id" class="user-card">
+              <div class="recent-users">
+                <h4>Recent Users</h4>
+                <div class="user-list">
+                  <div v-for="user in users.slice(0, 3)" :key="user.id" class="user-item">
                     <div class="user-avatar">
                       <span>{{ getUserInitials(user.name) }}</span>
                     </div>
@@ -684,30 +594,27 @@
                     </div>
                     <div class="user-status">
                       <span :class="['status-indicator', user.active ? 'online' : 'offline']"></span>
-                      <span class="status-text">{{ user.active ? 'Active' : 'Inactive' }}</span>
                     </div>
                   </div>
                 </div>
               </div>
-
-              <div class="form-actions">
-                <router-link to="/users" class="btn-primary">
-                  <i class="material-icons">settings</i> Manage Users
-                </router-link>
-              </div>
+            </div>
+            <div class="settings-card-footer">
+              <router-link to="/users" class="btn-manage">
+                <i class="material-icons">settings</i> Manage Users
+              </router-link>
             </div>
           </div>
 
-          <!-- System Preferences Section -->
-          <div v-if="activeSection === 'system'" class="settings-section">
-            <div class="section-header">
-              <div class="section-icon">
+          <!-- System Preferences Card -->
+          <div v-if="activeSection === 'system' || activeSection === 'all'" class="settings-card system-settings">
+            <div class="settings-card-header">
+              <div class="settings-card-icon">
                 <i class="material-icons">tune</i>
               </div>
               <h3>System Preferences</h3>
             </div>
-
-            <div class="settings-panel">
+            <div class="settings-card-content">
               <div class="form-group">
                 <label>Date Format</label>
                 <select v-model="systemSettings.dateFormat">
@@ -769,12 +676,11 @@
                   </label>
                 </div>
               </div>
-
-              <div class="form-actions">
-                <button class="btn-save" @click="saveSystemSettings">
-                  <i class="material-icons">save</i> Save Changes
-                </button>
-              </div>
+            </div>
+            <div class="settings-card-footer">
+              <button class="btn-save" @click="saveSystemSettings">
+                <i class="material-icons">save</i> Save Changes
+              </button>
             </div>
           </div>
         </div>
@@ -792,31 +698,6 @@
       </div>
     </main>
   </div>
-  <!-- Receipt Preview Modal -->
-<div v-if="showPreview" class="receipt-preview-overlay">
-  <div class="receipt-preview">
-    <div class="receipt-paper" :class="receiptSettings.paperSize">
-      <div class="receipt-header" v-if="receiptSettings.showLogo">
-        <img v-if="logoUrl" :src="logoUrl" alt="Logo" class="receipt-logo" />
-      </div>
-      <div class="receipt-header-text">{{ receiptSettings.header }}</div>
-
-      <div class="receipt-body">
-        <p><strong>Date:</strong> {{ new Date().toLocaleString() }}</p>
-        <p><strong>Sample Product:</strong> Laptop XYZ</p>
-        <p><strong>Quantity:</strong> 1</p>
-        <p><strong>Price:</strong> $1000</p>
-        <p><strong>Total:</strong> $1000</p>
-      </div>
-
-      <div class="receipt-footer-text">{{ receiptSettings.footer }}</div>
-    </div>
-    <div class="modal-actions">
-      <button @click="printPreview">Print</button>
-      <button @click="closePreview">Close</button>
-    </div>
-  </div>
-</div>
 </template>
 
 <script>
@@ -824,8 +705,6 @@ export default {
   name: 'SettingsView',
   data() {
     return {
-      showPreview: false, //REceipt Preview
-       logoUrl: '', // Will be set if a logo is uploaded
       // Navigation and layout data
       isDarkMode: localStorage.getItem('darkMode') === 'true',
       isSidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
@@ -837,20 +716,11 @@ export default {
         day: 'numeric'
       }),
       searchQuery: '',
-      //Receipt Settings
-      receiptSettings: {
-        header: '',
-        footer: '',
-        showLogo: true,
-        showCashier: true,
-        showTaxBreakdown: true,
-        showBarcode: true,
-        paperSize: '80mm'
-      },
 
       // Settings sections
-      activeSection: 'store',
+      activeSection: 'all',
       settingsSections: [
+        { id: 'all', name: 'All Settings', icon: 'dashboard' },
         { id: 'store', name: 'Store Profile', icon: 'store' },
         { id: 'currency', name: 'Currency', icon: 'payments' },
         { id: 'taxes', name: 'Taxes', icon: 'account_balance' },
@@ -899,16 +769,16 @@ export default {
         inactive: 1
       },
 
-      // Receipt settings
-      receiptSettingss: {
-        header: 'Thank you for shopping with us!',
-        footer: 'Please come again soon',
-        showLogo: true,
-        showCashier: true,
-        showTaxBreakdown: true,
-        showBarcode: true,
-        paperSize: '80mm'
+      // Receipt settings - Updated to match API
+      receiptSettings: {
+        business_name: '',
+        header_text: '',
+        footer_text: '',
+        legal_text: '',
+        logo_filename: null
       },
+      receiptLoading: false,
+      receiptSaving: false,
 
       // User data
       users: [
@@ -941,30 +811,6 @@ export default {
   },
 
   methods: {
-    // Receipt Settings
-    switchToReceipt() {
-    this.activeSection = 'receipt';
-    this.loadReceiptSettings();
-  },
-    async loadReceiptSettings() {
-      try{
-        const response = await fetch('/api/receipt-settings');
-        if(!response.ok) throw new Error('Failed to Fetch Settings');
-
-        const data = await response.json();
-        this.receiptSettings.header = data.header_text || '';
-        this.receiptSettings.footer = data.footer_text || '';
-        this.receiptSettings.showLogo = true; //default
-        this.receiptSettings.showCashier = true;
-        this.receiptSettings.showTaxBreakdown = true;
-        this.receiptSettings.showBarcode = true;
-        this.receiptSettings.paperSize = '80mm';
-      } catch(err){
-        console.error("Error Loading Receipt Settings",err);
-      }
-    },
-    //Save Receipt Settings
-
     // Navigation methods
     toggleSidebar() {
       this.isSidebarCollapsed = !this.isSidebarCollapsed;
@@ -989,7 +835,7 @@ export default {
     },
 
     // Store profile methods
-    handleLogoUpload(event) {
+    handleStoreLogoUpload(event) {
       const file = event.target.files[0];
       if (file) {
         const reader = new FileReader();
@@ -1058,58 +904,251 @@ export default {
       this.showToastMessage('Tax settings saved successfully');
     },
 
-    // Receipt methods
+    // Receipt API methods
+    async fetchReceiptSettings() {
+      this.receiptLoading = true;
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/receipt-settings', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          this.receiptSettings = {
+            business_name: data.business_name || '',
+            header_text: data.header_text || '',
+            footer_text: data.footer_text || '',
+            legal_text: data.legal_text || '',
+            logo_filename: data.logo_filename || null
+          };
+        } else if (response.status === 404) {
+          // No settings found, use defaults
+          this.receiptSettings = {
+            business_name: '',
+            header_text: '',
+            footer_text: '',
+            legal_text: '',
+            logo_filename: null
+          };
+        } else {
+          console.error('Failed to fetch receipt settings');
+          this.showToastMessage('Failed to load receipt settings', 'error');
+        }
+      } catch (error) {
+        console.error('Error fetching receipt settings:', error);
+        this.showToastMessage('Network error while loading settings', 'error');
+      } finally {
+        this.receiptLoading = false;
+      }
+    },
+
     async saveReceiptSettings() {
-    try {
-      const response = await fetch('/api/receipt-settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          header_text: this.receiptSettings.header,
-          footer_text: this.receiptSettings.footer,
-          // Phase 1 doesn't persist checkboxes and paperSize yet; include them in Phase 2.
-        }),
-      });
+      this.receiptSaving = true;
+      try {
+        const payload = {
+          business_name: this.receiptSettings.business_name,
+          header_text: this.receiptSettings.header_text,
+          footer_text: this.receiptSettings.footer_text,
+          legal_text: this.receiptSettings.legal_text
+        };
 
-      if (!response.ok) throw new Error('Failed to save settings');
+        const response = await fetch('http://127.0.0.1:5000/api/receipt-settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
 
-     // const result = await response.json();
-      alert('Receipt settings saved successfully');
-    } catch (err) {
-      console.error('Error saving receipt settings:', err);
-    }
-  },
-    async uploadLogo(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+        if (response.ok) {
+          this.showToastMessage('Receipt settings saved successfully', 'success');
+        } else {
+          const errorData = await response.json();
+          this.showToastMessage(errorData.message || 'Failed to save settings', 'error');
+        }
+      } catch (error) {
+        console.error('Error saving receipt settings:', error);
+        this.showToastMessage('Network error while saving settings', 'error');
+      } finally {
+        this.receiptSaving = false;
+      }
+    },
 
-  const formData = new FormData();
-  formData.append('logo', file);
+    async handleLogoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
 
-  try {
-    const response = await fetch('/api/receipt-settings/logo', {
-      method: 'POST',
-      body: formData,
-    });
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        this.showToastMessage('Please select a valid image file', 'error');
+        return;
+      }
 
-    if (!response.ok) throw new Error('Failed to upload logo');
-    const result = await response.json();
-    alert('Logo uploaded: ' + result.filename);
-  } catch (err) {
-    console.error('Logo upload error:', err);
-  }
-},
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        this.showToastMessage('Image size should be less than 2MB', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('logo', file);
+
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/receipt-settings/logo', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          this.receiptSettings.logo_filename = data.filename;
+          this.showToastMessage('Logo uploaded successfully', 'success');
+        } else {
+          const errorData = await response.json();
+          this.showToastMessage(errorData.error || 'Failed to upload logo', 'error');
+        }
+      } catch (error) {
+        console.error('Error uploading logo:', error);
+        this.showToastMessage('Network error while uploading logo', 'error');
+      }
+
+      // Clear the input
+      this.$refs.logoInput.value = '';
+    },
+
+    removeLogo() {
+      this.receiptSettings.logo_filename = null;
+      this.showToastMessage('Logo removed. Save changes to apply.', 'success');
+    },
+
+    getLogoUrl(filename) {
+      if (!filename) return null;
+      return `http://127.0.0.1:5000/static/receipt_logos/${filename}`;
+    },
 
     previewReceipt() {
-    // Set logo URL if available
-    this.logoUrl = '/static/logo.png'; // Change path based on your setup
-    this.showPreview = true;
-  },
-    closePreview() {
-    this.showPreview = false;
-  },
+      const sampleReceipt = {
+        receipt_id: 'SAMPLE-001',
+        created_at: new Date().toISOString(),
+        cashier_name: 'John Doe',
+        snapshot: {
+          items: [
+            { name: 'Sample Product 1', quantity: 2, price: 29.98 },
+            { name: 'Sample Product 2', quantity: 1, price: 15.99 }
+          ],
+          subtotal: 45.97,
+          tax: 3.68,
+          discount: 0,
+          total: 49.65
+        }
+      };
+
+      // Open preview in new window
+      const previewWindow = window.open('', '_blank', 'width=400,height=600');
+      previewWindow.document.write(`
+        <html>
+          <head>
+            <title>Receipt Preview - ${this.receiptSettings.business_name || 'Your Business'}</title>
+            <style>
+              body {
+                font-family: 'Courier New', monospace;
+                margin: 20px;
+                max-width: 300px;
+              }
+              .preview-note {
+                background: #f0f0f0;
+                padding: 10px;
+                margin-bottom: 20px;
+                border-radius: 5px;
+              }
+              .receipt {
+                border: 1px solid #ccc;
+                padding: 15px;
+                background: white;
+              }
+              .center { text-align: center; }
+              .logo { max-width: 100px; max-height: 60px; margin: 10px auto; }
+              .divider { border-top: 1px dashed #000; margin: 10px 0; padding-top: 5px; }
+              .flex { display: flex; justify-content: space-between; }
+              .bold { font-weight: bold; }
+              .small { font-size: 0.9em; }
+            </style>
+          </head>
+          <body>
+            <div class="preview-note">
+              <strong>Preview Mode</strong><br>
+              This shows how your receipt will look with current settings.
+            </div>
+
+            <div class="receipt">
+              ${this.receiptSettings.logo_filename ?
+                `<div class="center">
+                   <img src="${this.getLogoUrl(this.receiptSettings.logo_filename)}" class="logo">
+                 </div>` : ''}
+
+              <div class="center bold">
+                ${this.receiptSettings.business_name || 'YOUR BUSINESS NAME'}
+              </div>
+
+              ${this.receiptSettings.header_text ?
+                `<div class="center small" style="margin: 10px 0;">
+                   ${this.receiptSettings.header_text}
+                 </div>` : ''}
+
+              <div class="divider">
+                <div class="center">
+                  Receipt #${sampleReceipt.receipt_id}<br>
+                  ${new Date(sampleReceipt.created_at).toLocaleString()}<br>
+                  Cashier: ${sampleReceipt.cashier_name}
+                </div>
+              </div>
+
+              <div class="divider">
+                ${sampleReceipt.snapshot.items.map(item =>
+                  `<div class="flex">
+                     <span>${item.name} (${item.quantity}x)</span>
+                     <span>$${item.price.toFixed(2)}</span>
+                   </div>`
+                ).join('')}
+              </div>
+
+              <div class="divider">
+                <div class="flex">
+                  <span>Subtotal:</span>
+                  <span>$${sampleReceipt.snapshot.subtotal.toFixed(2)}</span>
+                </div>
+                <div class="flex">
+                  <span>Tax:</span>
+                  <span>$${sampleReceipt.snapshot.tax.toFixed(2)}</span>
+                </div>
+                <div class="flex bold" style="border-top: 1px solid #000; padding-top: 5px; margin-top: 5px;">
+                  <span>Total:</span>
+                  <span>$${sampleReceipt.snapshot.total.toFixed(2)}</span>
+                </div>
+              </div>
+
+              ${this.receiptSettings.footer_text ?
+                `<div class="center small divider">
+                   ${this.receiptSettings.footer_text}
+                 </div>` : ''}
+
+              ${this.receiptSettings.legal_text ?
+                `<div class="center small divider">
+                   ${this.receiptSettings.legal_text}
+                 </div>` : ''}
+
+              <div class="center divider">
+                <div style="height: 20px; background: repeating-linear-gradient(90deg, #000, #000 1px, #fff 1px, #fff 2px); margin: 10px 0;"></div>
+                <div class="small">${sampleReceipt.receipt_id}</div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+    },
 
     // System settings methods
     saveSystemSettings() {
@@ -1123,6 +1162,7 @@ export default {
         localStorage.setItem('darkMode', 'false');
       } else if (this.systemSettings.theme === 'auto') {
         // Logic to detect system preference would go here
+        // For now, we'll just use light mode
         this.isDarkMode = false;
         localStorage.setItem('darkMode', 'false');
       }
@@ -1158,9 +1198,23 @@ export default {
     }
   },
 
+  watch: {
+    // Auto-load receipt settings when receipt tab is clicked
+    activeSection(newSection) {
+      if (newSection === 'receipt') {
+        this.fetchReceiptSettings();
+      }
+    }
+  },
+
   created() {
     document.addEventListener('click', this.handleClickOutside);
     window.addEventListener('resize', this.handleResize);
+
+    // Load receipt settings if receipt section is active on page load
+    if (this.activeSection === 'receipt') {
+      this.fetchReceiptSettings();
+    }
 
     // Here you would fetch actual settings from your API
     // For example:
@@ -1189,48 +1243,6 @@ export default {
 </script>
 
 <style scoped>
-/* Receipt Modal CSS */
-.receipt-preview-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-.receipt-preview {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 400px;
-  max-width: 90%;
-}
-.receipt-paper.80mm {
-  width: 80mm;
-}
-.receipt-paper.58mm {
-  width: 58mm;
-}
-.receipt-paper.a4 {
-  width: 210mm;
-}
-.receipt-logo {
-  display: block;
-  max-height: 60px;
-  margin: 0 auto;
-}
-.modal-actions {
-  text-align: center;
-  margin-top: 20px;
-}
-.modal-actions button {
-  margin: 0 10px;
-}
-/* Ends here */
 /* Main Layout Styles */
 .dashboard-app {
   display: flex;
@@ -1256,186 +1268,19 @@ export default {
   --shadow-color: rgba(0, 0, 0, 0.5);
 }
 
-/* Settings Management Container */
-.settings-management {
-  padding: 0 24px 40px;
+/* Settings Container */
+.settings-container {
+  padding: 0 20px 40px;
 }
 
-/* Metrics Grid - Settings Summary Cards */
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.metric-card {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  height: 180px;
-}
-
-.metric-card-inner {
-  position: relative;
-  height: 100%;
-  background-color: var(--background-color-primary, white);
-  border-radius: inherit;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  z-index: 2;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.metric-card-inner:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
-}
-
-.metric-icon-container {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.metric-icon {
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  background-color: var(--primary-color-light, #ede9fe);
-  color: var(--primary-color, #4f46e5);
-}
-
-.metric-icon.success {
-  background-color: rgba(52, 211, 153, 0.2);
-  color: var(--success-color, #34d399);
-}
-
-.metric-icon i {
-  font-size: 24px;
-}
-
-.metric-trend {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-color-secondary, #64748b);
-}
-
-.metric-trend.positive {
-  color: var(--success-color, #34d399);
-}
-
-.trend-value {
-  font-weight: 600;
-}
-
-.metric-content {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.metric-label {
-  color: var(--text-color-secondary, #64748b);
-  font-size: 0.9rem;
-  margin-bottom: 8px;
-}
-
-.metric-value {
-  margin-bottom: 10px;
-}
-
-.value-number {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-color-primary, #1e293b);
-}
-
-.value-text {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--text-color-primary, #1e293b);
-}
-
-.value-label {
-  font-size: 0.875rem;
-  color: var(--text-color-secondary, #64748b);
-  margin-left: 5px;
-}
-
-.metric-action {
-  margin-top: auto;
-}
-
-.btn-configure {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 8px 15px;
-  border: none;
-  border-radius: 8px;
-  background-color: var(--background-color-secondary, #f8fafc);
-  color: var(--text-color-secondary, #64748b);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-configure:hover {
-  background-color: var(--primary-color, #4f46e5);
-  color: white;
-}
-
-.metric-card-backdrop, .metric-card-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.metric-card-backdrop {
-  background: radial-gradient(
-    circle at 50% 0%,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0) 75%
-  );
-}
-
-.metric-card-glow {
-  background: radial-gradient(
-    circle at 50% 50%,
-    rgba(79, 70, 229, 0.1) 0%,
-    rgba(79, 70, 229, 0) 70%
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.metric-card-inner:hover .metric-card-glow {
-  opacity: 1;
-}
-
-/* Settings Navigation Filters */
-.filter-section {
-  margin-bottom: 24px;
-}
-
+/* Settings Navigation */
 .settings-nav {
   display: flex;
   flex-wrap: nowrap;
-  gap: 12px;
+  gap: 10px;
+  padding: 10px 0;
+  margin-bottom: 20px;
   overflow-x: auto;
-  padding: 5px 0;
   scrollbar-width: thin;
 }
 
@@ -1461,7 +1306,7 @@ export default {
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .settings-nav-btn.active {
@@ -1471,34 +1316,42 @@ export default {
 
 .settings-nav-btn:hover:not(.active) {
   background-color: var(--background-color-secondary, #f8fafc);
+  color: var(--text-color-primary, #1e293b);
 }
 
 .settings-nav-btn i {
   font-size: 18px;
 }
 
-/* Settings Content */
-.settings-content {
-  margin-top: 24px;
+/* Settings Cards */
+.settings-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
 }
 
-.settings-section {
+.settings-card {
   background-color: var(--background-color-primary, white);
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  margin-bottom: 24px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.section-header {
-  padding: 16px 20px;
+.settings-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.settings-card-header {
+  padding: 15px 20px;
   border-bottom: 1px solid var(--border-color, #e2e8f0);
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.section-icon {
+.settings-card-icon {
   width: 40px;
   height: 40px;
   display: flex;
@@ -1509,31 +1362,39 @@ export default {
   color: var(--primary-color, #4f46e5);
 }
 
-.section-icon i {
+.settings-card-icon i {
   font-size: 24px;
 }
 
-.section-header h3 {
+.settings-card-header h3 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-color-primary, #1e293b);
 }
 
-.settings-panel {
-  padding: 24px;
+.settings-card-content {
+  padding: 20px;
+}
+
+.settings-card-footer {
+  padding: 15px 20px;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 /* Form Elements */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   color: var(--text-color-primary, #1e293b);
 }
 
@@ -1544,10 +1405,10 @@ export default {
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px;
   border: 1px solid var(--border-color, #e2e8f0);
-  border-radius: 8px;
-  font-size: 0.9rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
   background-color: var(--background-color-primary, white);
   color: var(--text-color-primary, #1e293b);
   transition: border-color 0.2s ease;
@@ -1616,12 +1477,12 @@ export default {
   color: var(--text-color-primary, #1e293b);
 }
 
-/* Store Profile Section */
+/* Store Profile Card */
 .store-preview {
   display: flex;
   align-items: center;
   gap: 15px;
-  padding: 15px;
+  padding: 10px;
   margin-bottom: 20px;
   background-color: var(--background-color-secondary, #f8fafc);
   border-radius: 10px;
@@ -1670,42 +1531,34 @@ export default {
   color: var(--text-color-secondary, #64748b);
 }
 
-/* Currency Settings Section */
+/* Currency Settings Card */
 .form-preview {
   margin-top: 20px;
 }
 
-.form-preview label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  font-size: 0.9rem;
-  color: var(--text-color-primary, #1e293b);
-}
-
 .preview-box {
-  padding: 12px;
-  border-radius: 8px;
+  padding: 10px;
+  border-radius: 6px;
   background-color: var(--background-color-secondary, #f8fafc);
   color: var(--text-color-primary, #1e293b);
-  font-size: 1.1rem;
+  font-size: 1rem;
   text-align: center;
   font-weight: 600;
 }
 
-/* Discount Settings Section */
+/* Discount Settings Card */
 .discount-stats {
   display: flex;
-  gap: 15px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-.stat-card {
+.stat-item {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 15px;
+  gap: 10px;
+  padding: 10px;
   background-color: var(--background-color-secondary, #f8fafc);
   border-radius: 8px;
 }
@@ -1731,16 +1584,6 @@ export default {
   color: var(--text-color-secondary, #94a3b8);
 }
 
-.stat-icon.admin {
-  background-color: rgba(79, 70, 229, 0.2);
-  color: var(--primary-color, #4f46e5);
-}
-
-.stat-icon.cashier {
-  background-color: rgba(245, 158, 11, 0.2);
-  color: var(--warning-color, #f59e0b);
-}
-
 .stat-icon i {
   font-size: 20px;
 }
@@ -1757,45 +1600,41 @@ export default {
   color: var(--text-color-secondary, #64748b);
 }
 
-.sub-heading {
+.discount-list-preview h4,
+.recent-users h4 {
   margin-top: 0;
-  margin-bottom: 15px;
-  font-size: 1rem;
+  margin-bottom: 10px;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-color-primary, #1e293b);
+  color: var(--text-color-secondary, #64748b);
 }
 
-.discount-list table {
+.discount-list-preview table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
-  background-color: var(--background-color-primary, white);
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.discount-list th,
-.discount-list td {
-  padding: 12px 15px;
+.discount-list-preview th,
+.discount-list-preview td {
+  padding: 8px 10px;
   text-align: left;
   border-bottom: 1px solid var(--border-color, #e2e8f0);
 }
 
-.discount-list th {
+.discount-list-preview th {
   font-weight: 600;
   color: var(--text-color-secondary, #64748b);
-  background-color: var(--background-color-secondary, #f8fafc);
 }
 
-.discount-list tr:last-child td {
+.discount-list-preview tr:last-child td {
   border-bottom: none;
 }
 
 .status-badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  padding: 2px 8px;
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 500;
@@ -1811,108 +1650,12 @@ export default {
   color: var(--text-color-secondary, #94a3b8);
 }
 
-.no-data-message {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  background-color: var(--background-color-secondary, #f8fafc);
-  border-radius: 8px;
-  color: var(--text-color-secondary, #64748b);
-}
-
-.no-data-message i {
-  font-size: 40px;
-  margin-bottom: 15px;
-  opacity: 0.5;
-}
-
-.no-data-message p {
-  margin: 0;
-}
-
-/* User Management Section */
-.user-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 15px;
-}
-
-.user-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.no-discounts {
   padding: 20px;
-  background-color: var(--background-color-secondary, #f8fafc);
-  border-radius: 8px;
   text-align: center;
-}
-
-.user-avatar {
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background-color: var(--primary-color-light, #ede9fe);
-  color: var(--primary-color, #4f46e5);
-  font-weight: 600;
-  font-size: 1.25rem;
-  margin-bottom: 15px;
-}
-
-.user-details h5 {
-  margin: 0 0 5px 0;
-  font-size: 1rem;
-  color: var(--text-color-primary, #1e293b);
-}
-
-.user-role {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 3px 8px;
-  border-radius: 10px;
-}
-
-.user-role.admin {
-  background-color: rgba(79, 70, 229, 0.1);
-  color: var(--primary-color, #4f46e5);
-}
-
-.user-role.cashier {
-  background-color: rgba(245, 158, 11, 0.1);
-  color: var(--warning-color, #f59e0b);
-}
-
-.user-status {
-  margin-top: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-
-.status-indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.status-indicator.online {
-  background-color: var(--success-color, #34d399);
-}
-
-.status-indicator.offline {
-  background-color: var(--text-color-secondary, #94a3b8);
-}
-
-.status-text {
-  font-size: 0.75rem;
   color: var(--text-color-secondary, #64748b);
+  background-color: var(--background-color-secondary, #f8fafc);
+  border-radius: 6px;
 }
 
 /* Theme Chooser */
@@ -1937,12 +1680,11 @@ export default {
 .theme-preview {
   width: 100%;
   height: 80px;
-  border-radius: 8px;
+  border-radius: 6px;
   margin-bottom: 8px;
   overflow: hidden;
   border: 2px solid transparent;
   transition: border-color 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .theme-option.active .theme-preview {
@@ -2023,18 +1765,82 @@ export default {
   background-color: #1e293b;
 }
 
-/* Form Actions */
-.form-actions {
+/* User List */
+.user-list {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
   gap: 10px;
-  margin-top: 20px;
 }
 
-.btn-save, .btn-secondary, .btn-primary {
+.user-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  background-color: var(--background-color-secondary, #f8fafc);
+  border-radius: 8px;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--primary-color-light, #ede9fe);
+  color: var(--primary-color, #4f46e5);
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-right: 10px;
+}
+
+.user-details {
+  flex: 1;
+}
+
+.user-details h5 {
+  margin: 0 0 2px 0;
+  font-size: 0.875rem;
+  color: var(--text-color-primary, #1e293b);
+}
+
+.user-role {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.user-role.admin {
+  background-color: rgba(79, 70, 229, 0.1);
+  color: var(--primary-color, #4f46e5);
+}
+
+.user-role.cashier {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--warning-color, #f59e0b);
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-indicator.online {
+  background-color: var(--success-color, #34d399);
+}
+
+.status-indicator.offline {
+  background-color: var(--text-color-secondary, #94a3b8);
+}
+
+/* Buttons */
+.btn-save, .btn-preview, .btn-manage {
   padding: 8px 16px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -2053,23 +1859,23 @@ export default {
   background-color: var(--primary-color-dark, #4338ca);
 }
 
-.btn-secondary {
+.btn-preview {
   background-color: var(--background-color-secondary, #f8fafc);
   color: var(--text-color-secondary, #64748b);
 }
 
-.btn-secondary:hover {
+.btn-preview:hover {
   background-color: var(--border-color, #e2e8f0);
   color: var(--text-color-primary, #1e293b);
 }
 
-.btn-primary {
+.btn-manage {
   background-color: var(--primary-color, #4f46e5);
   color: white;
   text-decoration: none;
 }
 
-.btn-primary:hover {
+.btn-manage:hover {
   background-color: var(--primary-color-dark, #4338ca);
 }
 
@@ -2079,7 +1885,7 @@ export default {
   bottom: 20px;
   right: 20px;
   padding: 12px 20px;
-  border-radius: 8px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2121,18 +1927,14 @@ export default {
 
 /* Responsive Styles */
 @media (max-width: 1200px) {
-  .metrics-grid {
-    grid-template-columns: 1fr 1fr;
+  .settings-cards {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .settings-management {
+  .settings-container {
     padding: 0 15px 30px;
-  }
-
-  .metrics-grid {
-    grid-template-columns: 1fr;
   }
 
   .discount-stats {
@@ -2149,25 +1951,101 @@ export default {
 }
 
 @media (max-width: 480px) {
-  .form-actions {
+  .settings-card-footer {
     flex-direction: column;
   }
 
-  .btn-save, .btn-secondary, .btn-primary {
+  .btn-save, .btn-preview, .btn-manage {
     width: 100%;
     justify-content: center;
+  }
+
+  .settings-nav-btn {
+    padding: 8px 12px;
   }
 
   .settings-nav-btn span {
     display: none;
   }
 
-  .section-header h3 {
+  .settings-card-header h3 {
     font-size: 1rem;
   }
+}
 
-  .user-grid {
-    grid-template-columns: 1fr;
-  }
+/* Receipt Settings Specific Styles */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 20px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(79, 70, 229, 0.2);
+  border-radius: 50%;
+  border-top-color: #4f46e5;
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.logo-upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.current-logo {
+  position: relative;
+  display: inline-block;
+}
+
+.logo-preview {
+  max-width: 200px;
+  max-height: 100px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #e2e8f0;
+}
+
+.remove-logo-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.remove-logo-btn:hover {
+  background-color: #dc2626;
+}
+
+.help-text {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
