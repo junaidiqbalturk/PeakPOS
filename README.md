@@ -1,6 +1,6 @@
 # PeakPOS - Point of Sale System
 
-![PeakPOS](https://i.ibb.co/tTFv3G8/PeakPOS.png)
+![PeakPOS](https://i.ibb.co/Rkds7FzS/logo-pp.png)
 *A modern POS system for small and medium-sized businesses.*
 
 ## 🚀 Overview
