@@ -3,29 +3,34 @@
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
 import os
-from app import db, app
+from app import db
 import logging
 from app.models.receipt_settings import ReceiptSettings
 
 receipt_settings_bp = Blueprint('receipt_settings_bp', __name__)
-# UPLOAD_FOLDER = 'static/receipt_logos'
 
 @receipt_settings_bp.route('/receipt-settings', methods=['GET'])
 def get_settings():
     settings = db.session.query(ReceiptSettings).first()
     if not settings:
-        return jsonify({}), 404
+        return jsonify({
+            'business_name': '',
+            'header_text': '',
+            'footer_text': '',
+            'legal_text': '',
+            'logo_filename': None
+        }), 200
     return jsonify({
-        'business_name': settings.business_name,
-        'header_text': settings.header_text,
-        'footer_text': settings.footer_text,
-        'legal_text': settings.legal_text,
+        'business_name': settings.business_name or '',
+        'header_text': settings.header_text or '',
+        'footer_text': settings.footer_text or '',
+        'legal_text': settings.legal_text or '',
         'logo_filename': settings.logo_filename
-    })
+    }), 200
 
 @receipt_settings_bp.route('/receipt-settings', methods=['POST'])
 def update_settings():
-    data = request.json
+    data = request.json or {}
     settings = db.session.query(ReceiptSettings).first()
     if not settings:
         settings = ReceiptSettings()
@@ -37,18 +42,14 @@ def update_settings():
     db.session.add(settings)
     db.session.commit()
 
-    return jsonify({'message': 'Settings updated successfully'})
+    return jsonify({'message': 'Settings updated successfully'}), 200
 
 @receipt_settings_bp.route('/receipt-settings/logo', methods=['POST'])
 def upload_logo():
-    if 'file' not in request.files:
-        logging.basicConfig(level=logging.DEBUG)
-        return jsonify({"error": "No file part"}), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        logging.basicConfig(level=logging.DEBUG)
-        return jsonify({"error": "No selected file"}), 400
+    # Support both 'file' and 'logo' field names for robustness
+    file = request.files.get('file') or request.files.get('logo')
+    if not file or file.filename == '':
+        return jsonify({"error": "No file part or selected file"}), 400
 
     # Use absolute path
     upload_folder = os.path.join(current_app.root_path, 'static', 'receipt_logos')
@@ -59,7 +60,7 @@ def upload_logo():
 
     file.save(file_path)
 
-    # ✅ Save filename in DB
+    # Save filename in DB
     settings = ReceiptSettings.query.first()
     if not settings:
         settings = ReceiptSettings()

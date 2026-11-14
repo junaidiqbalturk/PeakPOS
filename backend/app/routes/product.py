@@ -42,6 +42,7 @@ def save_product_image(file, product_id):
 
 # Create Product
 @product_bp.route("/products", methods=["POST"])
+@jwt_required()
 def add_product():
     data = request.get_json()
     product = Product(name=data["name"], price=data["price"], stock=data["stock"], category_id=data["category_id"], )
