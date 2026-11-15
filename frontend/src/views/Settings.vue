@@ -200,6 +200,58 @@
                 />
               </div>
             </div>
+
+            <!-- Direct Hardware Peripheral Strip -->
+            <div class="hardware-peripheral-box mt-3">
+              <div class="hardware-status-row">
+                <div class="status-indicator-wrap">
+                  <span class="status-pulse-dot" :class="{ connected: printerStatus.connected }"></span>
+                  <div>
+                    <strong>{{ printerStatus.name }}</strong>
+                    <small>{{ printerStatus.connected ? 'Silent Direct ESC/POS Hardware Ready' : 'Standard Browser Print Preview Active' }}</small>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="btn-kick-drawer"
+                  @click="testCashDrawer"
+                  title="Pulse Cash Drawer Kick (ESC p 0 25 250)"
+                >
+                  <i class="material-icons">point_of_sale</i>
+                  <span>Test Drawer Kick</span>
+                </button>
+              </div>
+
+              <div class="hardware-actions-row">
+                <button
+                  type="button"
+                  class="btn-hardware-connect usb"
+                  @click="pairUsbPrinter"
+                  title="Pair USB Thermal Printer (WebUSB - No print preview popup)"
+                >
+                  <i class="material-icons">usb</i>
+                  <span>Pair USB Printer (WebUSB)</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-hardware-connect serial"
+                  @click="pairSerialPrinter"
+                  title="Pair Serial / COM Printer (WebSerial)"
+                >
+                  <i class="material-icons">settings_input_composite</i>
+                  <span>Pair COM Port</span>
+                </button>
+                <button
+                  v-if="printerStatus.type"
+                  type="button"
+                  class="btn-hardware-disconnect"
+                  @click="disconnectPrinter"
+                  title="Disconnect direct printer"
+                >
+                  Disconnect
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -329,6 +381,7 @@
 
 <script>
 import AppLayout from '@/components/layout/AppLayout.vue';
+import escpos from '@/services/escpos';
 import '@/assets/cards.css';
 
 export default {
@@ -342,6 +395,7 @@ export default {
       paperWidth: '80',
       taxRate: 7.0,
       currencySymbol: '$',
+      printerStatus: escpos.getPrinterStatus(),
       receiptSettings: {
         business_name: 'PeakPOS Retail & Pharmacy',
         header_text: '100 Innovation Boulevard, Suite 500\nPhone: (555) 019-2834\nTax Registration: #TX-902184',
@@ -455,8 +509,61 @@ export default {
       if (!filename) return null;
       return `http://127.0.0.1:5000/static/receipt_logos/${filename}`;
     },
-    printTestReceipt() {
-      window.print();
+    async pairUsbPrinter() {
+      try {
+        const res = await escpos.pairUsbPrinter();
+        this.printerStatus = escpos.getPrinterStatus();
+        this.showToast(`Paired with USB Printer: ${res.name}`, 'success');
+      } catch (err) {
+        this.showToast(err.message || 'USB pairing failed', 'error');
+      }
+    },
+    async pairSerialPrinter() {
+      try {
+        const res = await escpos.pairSerialPrinter(9600);
+        this.printerStatus = escpos.getPrinterStatus();
+        this.showToast(`Paired with Serial Printer: ${res.name}`, 'success');
+      } catch (err) {
+        this.showToast(err.message || 'Serial pairing failed', 'error');
+      }
+    },
+    disconnectPrinter() {
+      escpos.disconnectPrinter();
+      this.printerStatus = escpos.getPrinterStatus();
+      this.showToast('Direct hardware printer disconnected.', 'success');
+    },
+    async testCashDrawer() {
+      const kicked = await escpos.kickCashDrawer();
+      if (kicked) {
+        this.showToast('Cash drawer kick pulse sent!', 'success');
+      } else {
+        this.showToast('Drawer kicked (Audio pulse feedback). Pair USB printer for physical kick.', 'success');
+      }
+    },
+    async printTestReceipt() {
+      const receiptData = {
+        date: this.mockReceipt.date,
+        time: this.mockReceipt.time,
+        invoiceNo: '#PK-10842',
+        cashier: 'Admin',
+        items: this.mockReceipt.items,
+        subtotal: this.mockSubtotal,
+        tax: this.mockTax,
+        total: this.mockTotal,
+        tendered: 50.00,
+        change: Math.max(0, 50.00 - this.mockTotal),
+        paymentMethod: 'Cash'
+      };
+      const settings = {
+        ...this.receiptSettings,
+        paper_width: this.paperWidth
+      };
+      const res = await escpos.printReceiptSilently(receiptData, settings);
+      if (res.mode === 'silent_usb' || res.mode === 'silent_serial') {
+        this.showToast('Printed silently to direct thermal printer without dialog!', 'success');
+      } else {
+        this.showToast('Opened print preview. Pair USB printer in settings for silent printing.', 'success');
+      }
     },
     showToast(msg, type = 'success') {
       this.toast.message = msg;
@@ -772,6 +879,144 @@ export default {
   background: #1e293b;
   border-color: #334155;
   color: #818cf8;
+}
+
+/* Hardware Peripheral Direct Printing Box */
+.hardware-peripheral-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dark-theme .hardware-peripheral-box {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.hardware-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.status-indicator-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-pulse-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #94a3b8;
+  border: 2px solid #ffffff;
+}
+
+.status-pulse-dot.connected {
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+}
+
+.status-indicator-wrap strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.dark-theme .status-indicator-wrap strong {
+  color: #f8fafc;
+}
+
+.status-indicator-wrap small {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.btn-kick-drawer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dark-theme .btn-kick-drawer {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.btn-kick-drawer:hover {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #4338ca;
+}
+
+.hardware-actions-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-hardware-connect {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.btn-hardware-connect.usb {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #4338ca;
+}
+
+.btn-hardware-connect.usb:hover {
+  background: #4338ca;
+  color: #ffffff;
+}
+
+.btn-hardware-connect.serial {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.dark-theme .btn-hardware-connect.serial {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.btn-hardware-disconnect {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #fee2e2;
+  background: #fef2f2;
+  color: #ef4444;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 /* Right: Canvas Panel */

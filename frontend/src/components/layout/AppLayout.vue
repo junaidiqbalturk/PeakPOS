@@ -129,6 +129,10 @@
               <small>{{ userEmail }}</small>
             </div>
             <div class="popup-divider"></div>
+            <button class="popup-item lock-item" @click="isLocked = true; isUserMenuOpen = false">
+              <i class="material-icons">lock</i>
+              <span>Lock Terminal [Ctrl+L]</span>
+            </button>
             <router-link to="/admin/settings" class="popup-item" @click="isUserMenuOpen = false">
               <i class="material-icons">settings</i>
               <span>System Settings</span>
@@ -196,6 +200,15 @@
             <span>POS Register</span>
           </router-link>
 
+          <!-- Quick Lock Terminal Button -->
+          <button
+            class="header-icon-btn lock-btn"
+            @click="isLocked = true"
+            title="Lock Terminal & Switch Cashier [Ctrl+L]"
+          >
+            <i class="material-icons">lock_outline</i>
+          </button>
+
           <!-- Theme Dark/Light Mode Switcher -->
           <button
             class="header-icon-btn theme-toggle"
@@ -250,12 +263,24 @@
         <slot />
       </main>
     </div>
+
+    <!-- Fast Cashier PIN Switch / Terminal Lock Overlay -->
+    <PinLockModal
+      :is-open="isLocked"
+      @unlock="onTerminalUnlocked"
+      @close="isLocked = false"
+    />
   </div>
 </template>
 
 <script>
+import PinLockModal from '@/components/common/PinLockModal.vue';
+
 export default {
   name: 'AppLayout',
+  components: {
+    PinLockModal
+  },
   props: {
     pageTitle: {
       type: String,
@@ -264,6 +289,7 @@ export default {
   },
   data() {
     return {
+      isLocked: false,
       isDarkMode: localStorage.getItem('peakpos_dark_mode') === 'true',
       isSidebarCollapsed: localStorage.getItem('peakpos_sidebar_collapsed') === 'true',
       isMobileOpen: false,
@@ -353,6 +379,17 @@ export default {
         e.preventDefault();
         this.toggleSidebar();
       }
+      // Ctrl+L locks terminal
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'l' || e.key === 'L')) {
+        e.preventDefault();
+        this.isLocked = true;
+      }
+    },
+    onTerminalUnlocked(cashier) {
+      this.userName = cashier.name;
+      this.userEmail = cashier.email || this.userEmail;
+      this.userRole = cashier.role.toUpperCase();
+      this.isLocked = false;
     },
     handleLogout() {
       localStorage.removeItem('token');

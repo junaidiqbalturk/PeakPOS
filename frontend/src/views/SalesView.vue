@@ -62,6 +62,7 @@
             <kbd>F3</kbd> Held ({{ heldBillsCount }})
           </span>
           <span class="sc-tag" title="Pay and Print"><kbd>F12</kbd> Pay</span>
+          <span class="sc-tag lock-tag" @click="isTerminalLocked = true" title="Quick Lock Terminal & Switch Cashier [Ctrl+L]"><kbd>Ctrl+L</kbd> Lock</span>
         </div>
 
         <!-- Live Clock -->
@@ -70,8 +71,8 @@
           <span class="clock-date">{{ currentDate }}</span>
         </div>
 
-        <!-- Cashier Avatar Badge -->
-        <div class="cashier-badge">
+        <!-- Cashier Avatar Badge with Quick Lock on click -->
+        <div class="cashier-badge" @click="isTerminalLocked = true" title="Quick Lock Terminal & Switch Cashier [Ctrl+L]">
           <div class="cashier-avatar">
             <i class="material-icons">badge</i>
           </div>
@@ -79,6 +80,7 @@
             <span class="cashier-name">{{ cashierName }}</span>
             <span class="cashier-role">{{ cashierRole }}</span>
           </div>
+          <i class="material-icons lock-status-ico">lock_outline</i>
         </div>
 
         <!-- Mobile Cart Button -->
@@ -980,14 +982,32 @@
         <button class="toast-dismiss" @click="toast.show = false"><i class="material-icons">close</i></button>
       </div>
     </transition>
+
+    <!-- Fast Cashier PIN Switch / Terminal Lock Overlay -->
+    <PinLockModal
+      :is-open="isTerminalLocked"
+      @unlock="onCashierUnlocked"
+      @close="isTerminalLocked = false"
+    />
   </div>
 </template>
 
 <script>
+import PinLockModal from '@/components/common/PinLockModal.vue';
+import escpos from '@/services/escpos';
+
 export default {
   name: 'SalesView',
+  components: {
+    PinLockModal
+  },
   data() {
     return {
+      // Background USB Barcode Scanner Interceptor State
+      scannerBuffer: '',
+      lastKeystrokeTime: 0,
+      isTerminalLocked: false,
+
       // POS Display Mode: 'counter' (high-speed data grid) vs 'visual' (touch cards)
       posMode: localStorage.getItem('posMode') || 'counter',
 
@@ -1626,6 +1646,30 @@ export default {
         if (!response.ok) throw new Error('Failed to fetch receipt');
         const receipt = await response.json();
 
+        // Check if direct silent hardware thermal printer is paired
+        const printerStatus = escpos.getPrinterStatus();
+        if (printerStatus.connected) {
+          const receiptData = {
+            date: new Date(receipt.created_at || Date.now()).toLocaleDateString(),
+            time: new Date(receipt.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            invoiceNo: `#PK-${receipt.receipt_id}`,
+            cashier: this.cashierName || 'Admin',
+            items: receipt.snapshot.items,
+            subtotal: receipt.snapshot.subtotal,
+            tax: receipt.snapshot.tax,
+            total: receipt.snapshot.total,
+            tendered: this.paymentModal.tendered || receipt.snapshot.total,
+            change: this.paymentModal.change || 0,
+            paymentMethod: this.paymentModal.method || 'Cash',
+            customer: receipt.snapshot.customer
+          };
+          const res = await escpos.printReceiptSilently(receiptData, { business_name: 'PeakPOS Retail & Pharmacy' });
+          if (res.mode === 'silent_usb' || res.mode === 'silent_serial') {
+            this.showToast('Silent Print', 'Receipt printed directly to thermal printer & cash drawer kicked!', 'success');
+            return;
+          }
+        }
+
         const receiptHtml = `
 <!DOCTYPE html>
 <html>
@@ -1729,8 +1773,43 @@ export default {
       this.closeQuickView();
     },
 
-    // Keyboard Shortcuts Handler
+    // Keyboard Shortcuts & Background USB Barcode Scanner Handler
     handleGlobalKeydown(e) {
+      if (this.isTerminalLocked) return;
+
+      // Ctrl+L: Lock Terminal & Switch Cashier
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'l' || e.key === 'L')) {
+        e.preventDefault();
+        this.isTerminalLocked = true;
+        return;
+      }
+
+      // Background USB Laser / CCD Barcode Gun Interceptor
+      // Hardware barcode scanners stream characters rapidly (< 50ms interval) terminated by Enter
+      const now = Date.now();
+      const diff = now - this.lastKeystrokeTime;
+      this.lastKeystrokeTime = now;
+
+      if (e.key === 'Enter') {
+        if (this.scannerBuffer.length >= 3 && diff < 80) {
+          e.preventDefault();
+          e.stopPropagation();
+          const scannedCode = this.scannerBuffer.trim();
+          this.scannerBuffer = '';
+          this.processBackgroundBarcodeScan(scannedCode);
+          return;
+        }
+        this.scannerBuffer = '';
+      } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (diff < 60 || this.scannerBuffer.length === 0) {
+          this.scannerBuffer += e.key;
+        } else {
+          this.scannerBuffer = e.key;
+        }
+      } else if (e.key !== 'Shift') {
+        this.scannerBuffer = '';
+      }
+
       // Don't intercept if typing in standard textareas
       if (e.target.tagName === 'TEXTAREA') return;
 
@@ -1769,6 +1848,34 @@ export default {
         if (this.quickViewProduct) this.closeQuickView();
         if (this.showOrderComplete) this.closeOrderComplete();
       }
+    },
+
+    processBackgroundBarcodeScan(barcode) {
+      const code = String(barcode).trim().toLowerCase();
+      const product = this.products.find(p => {
+        const pBarcode = String(p.barcode || '').toLowerCase();
+        const pSku = String(p.sku || '').toLowerCase();
+        const pId = String(p.id);
+        const pName = String(p.name || '').toLowerCase();
+        return pBarcode === code || pSku === code || pId === code || pName === code;
+      });
+
+      if (product) {
+        this.addToCart(product);
+        escpos.playScanSuccess();
+        this.showToast('Item Scanned', `${product.name} added to cart`, 'success');
+        if (this.$refs.barcodeInput) this.counterSearchTerm = '';
+      } else {
+        escpos.playErrorBuzz();
+        this.showToast('Barcode Not Found', `No product matching "${barcode}"`, 'error');
+      }
+    },
+
+    onCashierUnlocked(cashier) {
+      this.cashierName = cashier.name;
+      this.cashierRole = cashier.role;
+      this.isTerminalLocked = false;
+      this.showToast('Shift Active', `Logged in as ${cashier.name}`, 'info');
     },
 
     showToast(title, message, type = 'success') {
@@ -2017,6 +2124,32 @@ export default {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cashier-badge:hover {
+  background: #eef2ff;
+  border-color: #6366f1;
+}
+
+.lock-status-ico {
+  font-size: 1rem;
+  color: #64748b;
+  margin-left: 2px;
+}
+
+.sc-tag.lock-tag {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sc-tag.lock-tag:hover {
+  background: #ef4444;
+  color: white;
 }
 
 .cashier-avatar {
