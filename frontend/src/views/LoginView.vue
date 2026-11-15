@@ -40,7 +40,7 @@ const login = async () => {
       router.push("/dashboard"); // Redirect after login
     }, 1000);
   } catch (error) {
-    errorMessage.value = error.message || "Invalid credentials";
+    errorMessage.value = error.message || error.error || "Invalid credentials";
   } finally {
     loading.value = false;
   }

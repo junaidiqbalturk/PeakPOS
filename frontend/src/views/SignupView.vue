@@ -174,7 +174,7 @@ const signup = async () => {
     // Redirect after a short delay
     setTimeout(() => router.push("/"), 2000);
   } catch (error) {
-    errorMessage.value = error.message || "Signup failed. Please try again.";
+    errorMessage.value = error.message || error.error || "Signup failed. Please try again.";
   } finally {
     loading.value = false;
   }
