@@ -27,5 +27,10 @@ class Config:
         f"?driver={DB_DRIVER}&TrustServerCertificate=yes"
     )
 
-    SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI", DEFAULT_DB_URI)
+    # Use SQLite file fallback if SQL Server is not reachable and SQLALCHEMY_DATABASE_URI is not set
+    sqlite_fallback_path = (Path(__file__).resolve().parent / "instance" / "peakpos.db").as_posix()
+    SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
+    if not SQLALCHEMY_DATABASE_URI:
+        # Check if MSSQL is reachable or default to SQLite fallback
+        SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", DEFAULT_DB_URI)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
