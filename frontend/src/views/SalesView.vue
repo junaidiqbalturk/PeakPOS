@@ -94,6 +94,17 @@
           <i class="material-icons lock-status-ico">lock_outline</i>
         </div>
 
+        <!-- Dedicated Logout / Sign Out Button (Always Visible) -->
+        <button
+          type="button"
+          class="btn-header-logout"
+          @click="handleLogout"
+          title="Sign Out of PeakPOS [Shift+Esc]"
+        >
+          <i class="material-icons">logout</i>
+          <span>Logout</span>
+        </button>
+
         <!-- Mobile Cart Button -->
         <button class="mobile-cart-btn" @click="toggleMobileCart" :class="{ 'has-items': cart.length > 0 }">
           <i class="material-icons">shopping_bag</i>
@@ -891,6 +902,7 @@
                     step="0.01"
                     v-model.number="paymentModal.tendered"
                     @input="calculateChange"
+                    @keydown.enter.prevent="proceedToCheckout"
                     placeholder="0.00"
                     class="tendered-input"
                   />
@@ -1112,7 +1124,7 @@
             </button>
             <button class="btn-new-order" @click="closeOrderComplete">
               <i class="material-icons">add_shopping_cart</i>
-              <span>New Sale [F1]</span>
+              <span>New Sale [F12 / Enter]</span>
             </button>
           </div>
         </div>
@@ -1723,7 +1735,7 @@ export default {
       if (this.cart.length === 0) return;
       this.paymentModal.show = true;
       this.paymentModal.method = 'cash';
-      this.paymentModal.tendered = Math.ceil(this.calculateTotal());
+      this.paymentModal.tendered = parseFloat(this.calculateTotal().toFixed(2));
       this.calculateChange();
 
       this.$nextTick(() => {
@@ -1736,6 +1748,11 @@ export default {
 
     closePaymentModal() {
       this.paymentModal.show = false;
+      this.$nextTick(() => {
+        if (this.$refs.barcodeInput) {
+          this.$refs.barcodeInput.focus();
+        }
+      });
     },
 
     setPaymentMethod(method) {
@@ -1768,6 +1785,23 @@ export default {
     // Checkout Finalization
     async proceedToCheckout() {
       if (this.cart.length === 0 || this.processingOrder) return;
+
+      const total = this.calculateTotal();
+      if (this.paymentModal.method === 'cash') {
+        if (!this.paymentModal.tendered || this.paymentModal.tendered <= 0) {
+          this.paymentModal.tendered = total;
+          this.calculateChange();
+        }
+        if (this.paymentModal.tendered < total) {
+          this.showToast('Insufficient Cash', `Need at least $${total.toFixed(2)}`, 'warning');
+          if (this.$refs.tenderedInput) {
+            this.$refs.tenderedInput.focus();
+            this.$refs.tenderedInput.select();
+          }
+          return;
+        }
+      }
+
       this.processingOrder = true;
 
       try {
@@ -1963,6 +1997,24 @@ export default {
     closeOrderComplete() {
       this.showOrderComplete = false;
       this.selectedDiscount = null;
+      this.cart = [];
+      this.customer = { name: '', phone: '', doctor: '' };
+      this.$nextTick(() => {
+        if (this.$refs.barcodeInput) {
+          this.$refs.barcodeInput.focus();
+        }
+      });
+    },
+
+    handleLogout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('role');
+      localStorage.removeItem('username');
+      localStorage.removeItem('tenant');
+      localStorage.removeItem('peak_pos_cart');
+      localStorage.removeItem('posMode');
+      this.$router.push('/');
     },
 
     showProductQuickView(product) {
@@ -1996,11 +2048,50 @@ export default {
     handleGlobalKeydown(e) {
       if (this.isTerminalLocked) return;
 
+      // Shift+Escape or Ctrl+Shift+Q: Quick Sign Out
+      if ((e.shiftKey && e.key === 'Escape') || (e.ctrlKey && e.shiftKey && (e.key === 'Q' || e.key === 'q'))) {
+        e.preventDefault();
+        this.handleLogout();
+        return;
+      }
+
       // Ctrl+L: Lock Terminal & Switch Cashier
       if ((e.ctrlKey || e.metaKey) && (e.key === 'l' || e.key === 'L')) {
         e.preventDefault();
         this.isTerminalLocked = true;
         return;
+      }
+
+      // 1. Order Complete / Receipt Dialog is Open: F12, Enter, F1, Space, or Escape starts New Sale
+      if (this.showOrderComplete) {
+        if (e.key === 'F12' || e.key === 'Enter' || e.key === 'F1' || e.key === ' ' || e.key === 'Escape') {
+          e.preventDefault();
+          this.closeOrderComplete();
+          return;
+        }
+      }
+
+      // 2. Payment Modal is Open: Enter completes transaction; Escape cancels
+      if (this.paymentModal.show) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.proceedToCheckout();
+          return;
+        }
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          this.closePaymentModal();
+          return;
+        }
+      }
+
+      // 3. Held Bills Modal is Open: Escape or F3 closes
+      if (this.heldBillsModal) {
+        if (e.key === 'Escape' || e.key === 'F3') {
+          e.preventDefault();
+          this.heldBillsModal = false;
+          return;
+        }
       }
 
       // Background USB Laser / CCD Barcode Gun Interceptor
@@ -2029,7 +2120,7 @@ export default {
         this.scannerBuffer = '';
       }
 
-      // Don't intercept if typing in standard textareas
+      // Don't intercept function keys if user is typing in standard textareas
       if (e.target.tagName === 'TEXTAREA') return;
 
       if (e.key === 'F1') {
@@ -2060,17 +2151,10 @@ export default {
       } else if (e.key === 'F12') {
         e.preventDefault();
         if (this.cart.length > 0 && !this.processingOrder) {
-          if (!this.paymentModal.show) {
-            this.openPaymentModal();
-          } else {
-            this.proceedToCheckout();
-          }
+          this.openPaymentModal();
         }
       } else if (e.key === 'Escape') {
-        if (this.paymentModal.show) this.closePaymentModal();
-        if (this.heldBillsModal) this.heldBillsModal = false;
         if (this.quickViewProduct) this.closeQuickView();
-        if (this.showOrderComplete) this.closeOrderComplete();
       }
     },
 
@@ -2426,6 +2510,52 @@ export default {
 .cashier-badge:hover {
   background: #eef2ff;
   border-color: #6366f1;
+}
+
+/* Dedicated Logout Button */
+.btn-header-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.btn-header-logout:hover {
+  background: #ef4444;
+  border-color: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-header-logout i {
+  font-size: 1.1rem;
+}
+
+@media (max-width: 1450px) {
+  .shortcuts-legend .sc-tag:nth-child(n+4) {
+    display: none;
+  }
+}
+
+@media (max-width: 1250px) {
+  .shortcuts-legend {
+    display: none;
+  }
+  .clock-widget {
+    display: none;
+  }
 }
 
 .lock-status-ico {
