@@ -7,6 +7,7 @@ from app.models.order import OrderItem
 from app.models.order import Order, OrderItem
 from app.models.user import User
 from app.models.activity_log import log_activity
+from app.utils.rbac import get_current_tenant_and_role, roles_required
 from werkzeug.utils import secure_filename
 
 product_bp = Blueprint("product", __name__)
@@ -100,9 +101,18 @@ def add_product_with_image():
 # Get All Products
 @product_bp.route("/products", methods=["GET"])
 def get_products():
-    products = Product.query.all()
+    try:
+        tenant_id, role = get_current_tenant_and_role()
+        if tenant_id and role != "super_admin":
+            products = Product.query.filter_by(tenant_id=tenant_id).all()
+        else:
+            products = Product.query.all()
+    except Exception:
+        # Fallback for unauthenticated catalog lookup: return all or first tenant
+        products = Product.query.all()
+
     if not products:
-        return jsonify([])  # Return an empty JSON list instead of None
+        return jsonify([])
     return jsonify([product.to_dict() for product in products])
 
 

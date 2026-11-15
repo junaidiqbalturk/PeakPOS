@@ -11,49 +11,49 @@ const routes = [
     path: "/dashboard",
     name: "Dashboard",
     component: DashboardView,
-    meta: { requiresAuth: true, title: "Executive Dashboard" },
+    meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager"], title: "Executive Dashboard" },
   },
   {
     path: "/sales",
     name: "Sales",
     component: SalesView,
-    meta: { requiresAuth: true, title: "Point of Sale Counter" },
+    meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager", "cashier"], title: "Point of Sale Counter" },
   },
   {
     path: "/reports",
     name: "Reports",
     component: () => import("../views/ReportsView.vue"),
-    meta: { requiresAuth: true, title: "Reports & Analytics" },
+    meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager"], title: "Reports & Analytics" },
   },
   {
     path: "/customers",
     name: "Customers",
     component: () => import("../views/CustomerView.vue"),
-    meta: { requiresAuth: true, title: "Customer Ledger" },
+    meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager", "cashier"], title: "Customer Ledger" },
   },
   {
     path: "/admin/products",
     name: "products-management",
     component: () => import("../views/ProductManagement.vue"),
-    meta: { requiresAuth: true, requiresAdmin: true, title: "Product Catalog" },
+    meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager"], title: "Product Catalog" },
   },
   {
     path: "/admin/categories",
     name: "category-management",
     component: () => import("../views/CategoryManagement.vue"),
-    meta: { requiresAuth: true, requiresAdmin: true, title: "Category Management" },
+    meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager"], title: "Category Management" },
   },
   {
     path: "/admin/settings",
     name: "Settings",
     component: () => import("../views/Settings.vue"),
-    meta: { requiresAuth: true, requiresAdmin: true, title: "Settings & Thermal Receipts" },
+    meta: { requiresAuth: true, roles: ["super_admin", "admin"], title: "Settings & Thermal Receipts" },
   },
   {
     path: "/admin/settings/discounts",
     name: "discount-management",
     component: () => import("../views/DiscountManagement.vue"),
-    meta: { requiresAuth: true, requiresAdmin: true, title: "Discounts & Promotions" },
+    meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager"], title: "Discounts & Promotions" },
   },
 
   // Aliases & Redirects to prevent dead links
@@ -74,10 +74,10 @@ const router = createRouter({
   routes,
 });
 
-// Route Guard for Authentication & Page Titles
+// Route Guard for Multi-Tenant Authentication, RBAC & Page Titles
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+  const role = (localStorage.getItem("role") || "cashier").toLowerCase();
   const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
 
   if (to.meta && to.meta.title) {
@@ -85,9 +85,22 @@ router.beforeEach((to, from, next) => {
   }
 
   if (to.meta.requiresAuth && (!token || !isAuthenticated)) {
-    next("/"); // Redirect to login if not authenticated
-  } else if (to.meta.requiresAdmin && role !== "admin") {
-    next("/dashboard"); // Redirect non-admins to dashboard
+    next("/");
+    return;
+  }
+
+  // RBAC Permission Guard
+  if (to.meta.roles && Array.isArray(to.meta.roles)) {
+    if (role === "super_admin" || to.meta.roles.includes(role)) {
+      next();
+    } else {
+      // Cashier redirected to sales register; others to sales if dashboard restricted
+      if (role === "cashier") {
+        next("/sales");
+      } else {
+        next("/dashboard");
+      }
+    }
   } else {
     next();
   }

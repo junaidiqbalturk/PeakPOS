@@ -4,6 +4,7 @@ from app import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from app.models.receipt import Receipt
+from app.utils.rbac import get_current_tenant_and_role
 
 receipt_bp = Blueprint("receipt", __name__)
 
@@ -11,7 +12,16 @@ receipt_bp = Blueprint("receipt", __name__)
 @jwt_required()
 def get_all_receipts():
     """Retrieve all receipts sorted latest first."""
-    receipts = Receipt.query.order_by(Receipt.created_at.desc()).limit(50).all()
+    try:
+        tenant_id, role = get_current_tenant_and_role()
+        if tenant_id and role != "super_admin":
+            # Scoped by tenant through order
+            receipts = Receipt.query.join(Order).filter(Order.tenant_id == tenant_id).order_by(Receipt.created_at.desc()).limit(50).all()
+        else:
+            receipts = Receipt.query.order_by(Receipt.created_at.desc()).limit(50).all()
+    except Exception:
+        receipts = Receipt.query.order_by(Receipt.created_at.desc()).limit(50).all()
+
     return jsonify([{
         "receipt_id": r.id,
         "order_id": r.order_id,

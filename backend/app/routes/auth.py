@@ -78,13 +78,22 @@ def login():
         expires = datetime.timedelta(days=1)
         access_token = create_access_token(
             identity=str(user.id),
+            additional_claims={
+                "tenant_id": user.tenant_id,
+                "role": user.role,
+                "username": user.username
+            },
             expires_delta=expires
         )
+
+        tenant_data = user.tenant.to_dict() if user.tenant else None
 
         return jsonify({
             "token": access_token,
             "role": user.role,
-            "username": user.username
+            "username": user.username,
+            "tenant_id": user.tenant_id,
+            "tenant": tenant_data
         }), 200
 
     return jsonify({"error": "Invalid email or password"}), 401

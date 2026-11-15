@@ -4,13 +4,14 @@ from datetime import datetime
 
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     total_price = db.Column(db.Float, nullable=False)
-    # Adding Discount ID in orders to handle complete details
-    discount_id = db.Column(db.Integer,db.ForeignKey('discount.id'), nullable=True)
-    # Adding Relationship between discount and order
+    discount_id = db.Column(db.Integer, db.ForeignKey('discount.id'), nullable=True)
     discount = db.relationship('Discount', backref='order')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    tenant = db.relationship("Tenant", back_populates="orders")
     order_items = db.relationship('OrderItem', backref='order', lazy=True, cascade="all, delete-orphan")
     receipts = db.relationship("Receipt", back_populates="order", cascade="all, delete-orphan")
 

@@ -51,7 +51,7 @@
       <nav class="sidebar-nav">
         <div class="nav-section-label" v-if="!isSidebarCollapsed">OPERATIONS</div>
 
-        <router-link to="/dashboard" class="nav-link" active-class="active">
+        <router-link to="/dashboard" class="nav-link" active-class="active" v-if="hasRole(['super_admin', 'admin', 'manager'])">
           <i class="material-icons">dashboard</i>
           <span class="nav-text">Dashboard</span>
           <span class="nav-tooltip" v-if="isSidebarCollapsed">Dashboard</span>
@@ -64,7 +64,7 @@
           <span class="nav-tooltip" v-if="isSidebarCollapsed">Sales Counter [F9]</span>
         </router-link>
 
-        <router-link to="/reports" class="nav-link" active-class="active">
+        <router-link to="/reports" class="nav-link" active-class="active" v-if="hasRole(['super_admin', 'admin', 'manager'])">
           <i class="material-icons">insights</i>
           <span class="nav-text">Reports & Analytics</span>
           <span class="nav-tooltip" v-if="isSidebarCollapsed">Reports & Analytics</span>
@@ -76,29 +76,29 @@
           <span class="nav-tooltip" v-if="isSidebarCollapsed">Customer Ledger</span>
         </router-link>
 
-        <div class="nav-section-label" v-if="!isSidebarCollapsed">CATALOG & INVENTORY</div>
+        <div class="nav-section-label" v-if="!isSidebarCollapsed && hasRole(['super_admin', 'admin', 'manager'])">CATALOG & INVENTORY</div>
 
-        <router-link to="/admin/products" class="nav-link" active-class="active">
+        <router-link to="/admin/products" class="nav-link" active-class="active" v-if="hasRole(['super_admin', 'admin', 'manager'])">
           <i class="material-icons">inventory_2</i>
           <span class="nav-text">Products Catalog</span>
           <span class="nav-tooltip" v-if="isSidebarCollapsed">Products Catalog</span>
         </router-link>
 
-        <router-link to="/admin/categories" class="nav-link" active-class="active">
+        <router-link to="/admin/categories" class="nav-link" active-class="active" v-if="hasRole(['super_admin', 'admin', 'manager'])">
           <i class="material-icons">category</i>
           <span class="nav-text">Categories</span>
           <span class="nav-tooltip" v-if="isSidebarCollapsed">Categories</span>
         </router-link>
 
-        <router-link to="/admin/settings/discounts" class="nav-link" active-class="active">
+        <router-link to="/admin/settings/discounts" class="nav-link" active-class="active" v-if="hasRole(['super_admin', 'admin', 'manager'])">
           <i class="material-icons">loyalty</i>
           <span class="nav-text">Discounts & Offers</span>
           <span class="nav-tooltip" v-if="isSidebarCollapsed">Discounts & Offers</span>
         </router-link>
 
-        <div class="nav-section-label" v-if="!isSidebarCollapsed">CONFIGURATION</div>
+        <div class="nav-section-label" v-if="!isSidebarCollapsed && hasRole(['super_admin', 'admin'])">CONFIGURATION</div>
 
-        <router-link to="/admin/settings" class="nav-link" active-class="active">
+        <router-link to="/admin/settings" class="nav-link" active-class="active" v-if="hasRole(['super_admin', 'admin'])">
           <i class="material-icons">tune</i>
           <span class="nav-text">Settings & Receipts</span>
           <span class="nav-tooltip" v-if="isSidebarCollapsed">Settings & Receipts</span>
@@ -339,6 +339,10 @@ export default {
     window.removeEventListener('keydown', this.handleGlobalKeydown);
   },
   methods: {
+    hasRole(allowedRoles) {
+      const currentRole = (localStorage.getItem('role') || 'cashier').toLowerCase();
+      return currentRole === 'super_admin' || allowedRoles.includes(currentRole);
+    },
     updateClock() {
       const now = new Date();
       this.liveClock = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });

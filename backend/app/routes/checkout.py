@@ -4,6 +4,7 @@ from app.models.discount import Discount
 from app.models.order import Order, OrderItem
 from app.models.product import Product
 from app.models.activity_log import ActivityLog
+from app.utils.rbac import get_current_tenant_and_role
 from app import db
 
 checkout_bp = Blueprint("checkout", __name__)
@@ -76,8 +77,15 @@ def checkout():
         # Round to 2 decimal places for financial precision
         total_price = round(total_price, 2)
 
-        # Create the new order
+        # Create the new order with tenant_id
+        tenant_id = None
+        try:
+            tenant_id, _ = get_current_tenant_and_role()
+        except Exception:
+            pass
+
         new_order = Order(
+            tenant_id=tenant_id,
             user_id=user_id,
             total_price=total_price,
             discount_id=discount_id if applied_discount else None

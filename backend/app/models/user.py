@@ -4,11 +4,15 @@ from flask_bcrypt import generate_password_hash, check_password_hash
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(20), default="cashier")  # Default role is "cashier"
+    role = db.Column(db.String(20), default="cashier")  # super_admin, admin, manager, cashier
+    pin_code = db.Column(db.String(10), nullable=True)  # 4-digit PIN for quick cashier swap / manager overrides
+    is_active = db.Column(db.Boolean, default=True)
 
+    tenant = db.relationship("Tenant", back_populates="users")
     receipts = db.relationship("Receipt", back_populates="user")
 
     def set_password(self, password):

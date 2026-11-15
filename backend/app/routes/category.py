@@ -1,25 +1,34 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models.category import Category
+from app.utils.rbac import get_current_tenant_and_role
 
 category_bp = Blueprint("category", __name__)
 
 
 @category_bp.route("/categories", methods=["POST"])
 def add_category():
-    data = request.get_json()
+    data = request.get_json() or {}
+    tenant_id = None
+    try:
+        tenant_id, _ = get_current_tenant_and_role()
+    except Exception:
+        pass
 
     # Validate data
     if not data.get("name"):
         return jsonify({"error": "Category name is required"}), 400
 
-    # Check if category already exists
-    existing_category = Category.query.filter_by(name=data["name"]).first()
+    # Check if category already exists in this tenant
+    query = Category.query.filter_by(name=data["name"])
+    if tenant_id:
+        query = query.filter_by(tenant_id=tenant_id)
+    existing_category = query.first()
     if existing_category:
         return jsonify({"error": "Category already exists"}), 400
 
     # Create new category
-    new_category = Category(name=data["name"])
+    new_category = Category(name=data["name"], tenant_id=tenant_id)
 
     db.session.add(new_category)
     db.session.commit()
@@ -29,10 +38,17 @@ def add_category():
 
 @category_bp.route("/categories", methods=["GET"])
 def get_categories():
-    categories = Category.query.all()
+    try:
+        tenant_id, role = get_current_tenant_and_role()
+        if tenant_id and role != "super_admin":
+            categories = Category.query.filter_by(tenant_id=tenant_id).all()
+        else:
+            categories = Category.query.all()
+    except Exception:
+        categories = Category.query.all()
 
     if not categories:
-        return jsonify([])  # Return an empty list if no categories exist
+        return jsonify([])
 
     return jsonify([category.to_dict() for category in categories]), 200
 

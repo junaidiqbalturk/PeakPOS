@@ -5,14 +5,16 @@ from sqlalchemy import func, desc, cast, Date
 from datetime import datetime, timedelta
 from app.models.order import Order, OrderItem
 from app.models.product import Product
+from app.utils.rbac import get_current_tenant_and_role, roles_required
 
 report_bp = Blueprint("report", __name__)
 
 
 @report_bp.route("/sales-summary", methods=["GET"])
-@jwt_required()
+@roles_required("super_admin", "admin", "manager")
 def sales_summary():
     try:
+        tenant_id, role = get_current_tenant_and_role()
         # Get date range from query parameters
         try:
             start_date = request.args.get("start_date", (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d"))
@@ -25,13 +27,16 @@ def sales_summary():
         except ValueError:
             return jsonify({"error": "Invalid date format. Use YYYY-MM-DD."}), 400
 
+        # Base filter
+        order_filter = [Order.created_at.between(start_date, end_date)]
+        if tenant_id and role != "super_admin":
+            order_filter.append(Order.tenant_id == tenant_id)
+
         # Get summary metrics
         summary = db.session.query(
             func.sum(Order.total_price).label("total_revenue"),
             func.count(Order.id).label("total_orders")
-        ).filter(
-            Order.created_at.between(start_date, end_date)
-        ).first()
+        ).filter(*order_filter).first()
 
         total_revenue = float(summary.total_revenue or 0)
         total_orders = int(summary.total_orders or 0)

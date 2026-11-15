@@ -4,7 +4,8 @@ from datetime import datetime
 
 class Discount(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    name = db.Column(db.String(100), nullable=False)
     discount_type = db.Column(db.String(20), nullable=False)  # 'percentage' or 'fixed'
     value = db.Column(db.Float, nullable=False)  # Discount value
     active = db.Column(db.Boolean, default=True)  # Is the discount active?
@@ -14,6 +15,7 @@ class Discount(db.Model):
         """Convert Discount object to dictionary format."""
         return {
             "id": self.id,
+            "tenant_id": self.tenant_id,
             "name": self.name,
             "discount_type": self.discount_type,
             "value": self.value,
