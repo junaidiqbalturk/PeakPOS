@@ -65,6 +65,17 @@
           <span class="fs-text">{{ isFullScreen ? 'Exit Full' : 'Full Screen' }}</span>
         </button>
 
+        <!-- Interactive POS Shortcuts Cheatsheet [?] with Green Gradient -->
+        <button
+          type="button"
+          class="shortcut-btn-green"
+          @click="openShortcutsModal"
+          title="Interactive POS Keyboard Shortcuts & Cheatsheet [?]"
+        >
+          <i class="material-icons">keyboard</i>
+          <span class="sc-btn-label">Shortcut</span>
+        </button>
+
         <!-- Quick Action Shortcuts -->
         <div class="shortcuts-legend">
           <span class="sc-tag" title="Search / Scan Focus"><kbd>F1</kbd> Scan</span>
@@ -1143,6 +1154,169 @@
       </div>
     </transition>
 
+    <!-- ==================== INTERACTIVE SHORTCUTS MODAL ==================== -->
+    <transition name="fade-modal">
+      <div class="modal-overlay" v-if="showShortcutsModal" @click="closeShortcutsModal">
+        <div class="shortcuts-dialog" @click.stop>
+          <!-- Modal Header -->
+          <div class="shortcuts-modal-header">
+            <div class="sc-title-box">
+              <div class="sc-header-icon-ring">
+                <i class="material-icons">keyboard</i>
+              </div>
+              <div>
+                <div class="sc-badge-row">
+                  <span class="sc-badge-pill">⚡ POS Turbo Mode</span>
+                  <span class="sc-badge-pill green">Interactive Reference</span>
+                </div>
+                <h3>Keyboard Shortcuts & Fast Keys</h3>
+              </div>
+            </div>
+            <button class="btn-modal-x" @click="closeShortcutsModal" title="Close [Esc]">
+              <i class="material-icons">close</i>
+            </button>
+          </div>
+
+          <!-- Interactive Live Key Detector Strip -->
+          <div class="sc-live-tester" :class="{ 'detected-active': lastDetectedKeyInfo.key }">
+            <div class="sc-tester-left">
+              <span class="tester-pulse-dot"></span>
+              <div v-if="lastDetectedKeyInfo.key" class="tester-detected-box">
+                <span class="tester-prefix">Key Pressed:</span>
+                <kbd class="tester-kbd">{{ lastDetectedKeyInfo.key }}</kbd>
+                <span class="tester-action-text">&bull; {{ lastDetectedKeyInfo.title }}</span>
+              </div>
+              <div v-else class="tester-prompt">
+                <i class="material-icons">touch_app</i>
+                <span><strong>Live Key Tester:</strong> Press any key on your keyboard to instantly highlight and test it!</span>
+              </div>
+            </div>
+            <div class="sc-tester-right">
+              <span class="tester-hint"><kbd>?</kbd> Toggle Guide &bull; <kbd>Esc</kbd> Exit</span>
+            </div>
+          </div>
+
+          <!-- Search & Category Filters -->
+          <div class="sc-controls-row">
+            <div class="sc-search-wrap">
+              <i class="material-icons">search</i>
+              <input
+                type="text"
+                v-model="shortcutSearchQuery"
+                placeholder="Search shortcuts by key, action, or description (e.g. F12, park, lock)..."
+                ref="shortcutSearchRef"
+              />
+              <button
+                v-if="shortcutSearchQuery"
+                class="sc-search-clear"
+                @click="shortcutSearchQuery = ''"
+              >
+                <i class="material-icons">close</i>
+              </button>
+            </div>
+
+            <div class="sc-category-tabs">
+              <button
+                type="button"
+                class="sc-tab-btn"
+                :class="{ active: activeShortcutCategory === 'all' }"
+                @click="activeShortcutCategory = 'all'"
+              >
+                All ({{ shortcutsList.length }})
+              </button>
+              <button
+                type="button"
+                class="sc-tab-btn"
+                :class="{ active: activeShortcutCategory === 'scan' }"
+                @click="activeShortcutCategory = 'scan'"
+              >
+                Scanning & Cart
+              </button>
+              <button
+                type="button"
+                class="sc-tab-btn"
+                :class="{ active: activeShortcutCategory === 'checkout' }"
+                @click="activeShortcutCategory = 'checkout'"
+              >
+                Checkout & Tender
+              </button>
+              <button
+                type="button"
+                class="sc-tab-btn"
+                :class="{ active: activeShortcutCategory === 'bill' }"
+                @click="activeShortcutCategory = 'bill'"
+              >
+                Bill Operations
+              </button>
+              <button
+                type="button"
+                class="sc-tab-btn"
+                :class="{ active: activeShortcutCategory === 'system' }"
+                @click="activeShortcutCategory = 'system'"
+              >
+                System & Terminal
+              </button>
+            </div>
+          </div>
+
+          <!-- Shortcuts Card Grid -->
+          <div class="sc-grid-container">
+            <div
+              v-for="sc in filteredShortcuts"
+              :key="sc.id"
+              class="sc-card"
+              :class="{ 'card-highlighted': activeHighlightedShortcutId === sc.id }"
+              @click="triggerShortcutAction(sc.id)"
+            >
+              <div class="sc-card-top">
+                <div class="sc-key-pill">
+                  <kbd>{{ sc.key }}</kbd>
+                </div>
+                <div class="sc-card-meta">
+                  <span class="sc-tag-pill" :class="sc.category">{{ sc.tag }}</span>
+                  <span class="sc-context-pill">{{ sc.context }}</span>
+                </div>
+              </div>
+
+              <div class="sc-card-body">
+                <h4 class="sc-card-title">{{ sc.title }}</h4>
+                <p class="sc-card-desc">{{ sc.description }}</p>
+              </div>
+
+              <div class="sc-card-footer">
+                <button
+                  type="button"
+                  class="btn-sc-run"
+                  @click.stop="triggerShortcutAction(sc.id)"
+                >
+                  <i class="material-icons">play_circle_outline</i>
+                  <span>Test Action</span>
+                </button>
+                <span class="sc-run-hint">Click card to test</span>
+              </div>
+            </div>
+
+            <div v-if="filteredShortcuts.length === 0" class="sc-empty-state">
+              <i class="material-icons">search_off</i>
+              <p>No shortcuts match "<strong>{{ shortcutSearchQuery }}</strong>"</p>
+              <button type="button" class="btn-sc-reset" @click="resetShortcutFilters">Reset Filters</button>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="sc-modal-footer">
+            <div class="sc-footer-info">
+              <i class="material-icons">info_outline</i>
+              <span>Pro-tip: Physical USB barcode scanners stream directly in the background without needing focus.</span>
+            </div>
+            <button type="button" class="btn-sc-close" @click="closeShortcutsModal">
+              <span>Close Cheatsheet [Esc]</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- Fast Cashier PIN Switch / Terminal Lock Overlay -->
     <PinLockModal
       :is-open="isTerminalLocked"
@@ -1221,6 +1395,114 @@ export default {
         order_id: null
       },
 
+      // Interactive Shortcuts Modal State
+      showShortcutsModal: false,
+      shortcutSearchQuery: '',
+      activeShortcutCategory: 'all',
+      activeHighlightedShortcutId: null,
+      lastDetectedKeyInfo: { key: '', title: '', desc: '' },
+      shortcutsList: [
+        {
+          id: 'f1',
+          key: 'F1',
+          title: 'Barcode Scan / Search Focus',
+          category: 'scan',
+          description: 'Instantly puts cursor focus into the Barcode Scanner input or Product Search bar, ready for typing or hardware scanning.',
+          context: 'Sales Terminal',
+          tag: 'Quick Scan'
+        },
+        {
+          id: 'enter',
+          key: 'Enter',
+          title: 'Process Checkout / New Sale',
+          category: 'checkout',
+          description: 'Finalizes transaction when in Payment Checkout modal, or instantly starts a fresh sale when viewing the completed Receipt dialog.',
+          context: 'Payment & Receipt Dialogs',
+          tag: 'Tender'
+        },
+        {
+          id: 'f2',
+          key: 'F2',
+          title: 'Park / Hold Current Sale',
+          category: 'bill',
+          description: 'Temporarily parks the active customer cart into the Held Register so you can serve the next customer immediately without losing items.',
+          context: 'Active Cart (>0 items)',
+          tag: 'Hold Cart'
+        },
+        {
+          id: 'f3',
+          key: 'F3',
+          title: 'Recall Parked / Held Bills',
+          category: 'bill',
+          description: 'Opens the Parked Sales drawer to view, restore, or discard held customer orders with exact items, prices, and quantities.',
+          context: 'Sales Terminal',
+          tag: 'Recall'
+        },
+        {
+          id: 'f4',
+          key: 'F4',
+          title: 'Clear / Void Entire Cart',
+          category: 'cart',
+          description: 'Quickly voids and empties all products, applied discounts, and customer information from the current checkout register.',
+          context: 'Sales Terminal',
+          tag: 'Void Bill'
+        },
+        {
+          id: 'f11',
+          key: 'F11',
+          title: 'Full Screen Terminal Toggle',
+          category: 'system',
+          description: 'Toggles POS into dedicated borderless full-screen kiosk mode for maximum workspace visibility and distraction-free cashier operation.',
+          context: 'Global Kiosk',
+          tag: 'Kiosk Display'
+        },
+        {
+          id: 'f12',
+          key: 'F12',
+          title: 'Open Payment / Finalize Sale',
+          category: 'checkout',
+          description: 'Launches the Tender & Payment modal with Quick Cash notes ($10, $20, $50, $100, Exact) and Card options. Also starts New Sale on receipt.',
+          context: 'Cart with items',
+          tag: 'Checkout'
+        },
+        {
+          id: 'ctrl_l',
+          key: 'Ctrl + L',
+          title: 'Lock Terminal & Switch Cashier',
+          category: 'system',
+          description: 'Instantly locks the screen with a secure PIN keypad so cashiers can take a break or switch shifts safely without closing sales.',
+          context: 'Global Security',
+          tag: 'Security PIN'
+        },
+        {
+          id: 'shift_esc',
+          key: 'Shift + Esc',
+          title: 'Fast Secure Sign Out',
+          category: 'system',
+          description: 'Terminates active session token immediately, purges session memory, and redirects to the login screen.',
+          context: 'Global Security',
+          tag: 'Auth'
+        },
+        {
+          id: 'esc',
+          key: 'Esc',
+          title: 'Close Modal / Cancel Action',
+          category: 'system',
+          description: 'Closes any open overlay (Shortcuts, Payment, Parked Bills, Product Quick View, or Receipt dialog) back to the main sales screen.',
+          context: 'Any Active Modal',
+          tag: 'Dismiss'
+        },
+        {
+          id: 'f9',
+          key: 'F9',
+          title: 'Toggle Register Mode (Admin)',
+          category: 'system',
+          description: 'Switches layout between High-Speed Counter Express (for barcode guns) and Visual Touch Catalog (for touchscreen tablets).',
+          context: 'Admins & Managers Only',
+          tag: 'Admin Mode'
+        }
+      ],
+
       // Cashier and Time state
       cashierName: localStorage.getItem('username') || 'Cashier',
       cashierRole: localStorage.getItem('role') || 'Staff',
@@ -1254,6 +1536,25 @@ export default {
     },
     cartTotalItems() {
       return this.cart.reduce((sum, item) => sum + item.quantity, 0);
+    },
+    filteredShortcuts() {
+      const query = (this.shortcutSearchQuery || '').trim().toLowerCase();
+      const category = this.activeShortcutCategory;
+
+      return this.shortcutsList.filter(sc => {
+        const matchesCategory = category === 'all' || sc.category === category;
+        if (!matchesCategory) return false;
+
+        if (!query) return true;
+
+        return (
+          sc.key.toLowerCase().includes(query) ||
+          sc.title.toLowerCase().includes(query) ||
+          sc.description.toLowerCase().includes(query) ||
+          sc.tag.toLowerCase().includes(query) ||
+          sc.context.toLowerCase().includes(query)
+        );
+      });
     },
     filteredProducts() {
       let result = [...this.products];
@@ -1292,6 +1593,117 @@ export default {
     }
   },
   methods: {
+    // POS Shortcuts Cheatsheet & Interactive Testing Controller
+    openShortcutsModal() {
+      this.showShortcutsModal = true;
+      this.lastDetectedKeyInfo = { key: '', title: '', desc: '' };
+      this.activeHighlightedShortcutId = null;
+      this.$nextTick(() => {
+        if (this.$refs.shortcutSearchRef) {
+          this.$refs.shortcutSearchRef.focus();
+        }
+      });
+    },
+
+    closeShortcutsModal() {
+      this.showShortcutsModal = false;
+      this.activeHighlightedShortcutId = null;
+    },
+
+    resetShortcutFilters() {
+      this.shortcutSearchQuery = '';
+      this.activeShortcutCategory = 'all';
+    },
+
+    handleKeyInShortcutModal(e) {
+      let matchedId = null;
+
+      if (e.key === 'F1') matchedId = 'f1';
+      else if (e.key === 'F2') matchedId = 'f2';
+      else if (e.key === 'F3') matchedId = 'f3';
+      else if (e.key === 'F4') matchedId = 'f4';
+      else if (e.key === 'F9') matchedId = 'f9';
+      else if (e.key === 'F11') matchedId = 'f11';
+      else if (e.key === 'F12') matchedId = 'f12';
+      else if (e.key === 'Enter') matchedId = 'enter';
+      else if ((e.ctrlKey || e.metaKey) && (e.key === 'l' || e.key === 'L')) matchedId = 'ctrl_l';
+      else if (e.shiftKey && e.key === 'Escape') matchedId = 'shift_esc';
+      else if (e.key === 'Escape') matchedId = 'esc';
+
+      if (matchedId) {
+        const found = this.shortcutsList.find(s => s.id === matchedId);
+        if (found) {
+          this.activeHighlightedShortcutId = found.id;
+          this.lastDetectedKeyInfo = {
+            key: found.key,
+            title: found.title,
+            desc: found.description
+          };
+          if (this.activeShortcutCategory !== 'all' && found.category !== this.activeShortcutCategory) {
+            this.activeShortcutCategory = 'all';
+          }
+          this.shortcutSearchQuery = '';
+          escpos.playBeep(1200, 0.08, 'sine');
+        }
+      } else {
+        this.lastDetectedKeyInfo = {
+          key: e.key,
+          title: 'Unbound Key',
+          desc: 'This key is not assigned to any default POS shortcut action.'
+        };
+        this.activeHighlightedShortcutId = null;
+      }
+    },
+
+    triggerShortcutAction(actionId) {
+      this.showShortcutsModal = false;
+      if (actionId === 'f1') {
+        this.$nextTick(() => {
+          if (this.posMode === 'counter' && this.$refs.barcodeInput) {
+            this.$refs.barcodeInput.focus();
+            this.$refs.barcodeInput.select();
+          } else if (this.$refs.visualSearchInput) {
+            this.$refs.visualSearchInput.focus();
+          }
+        });
+        this.showToast('Search Focused [F1]', 'Ready for barcode scan or product search', 'info');
+      } else if (actionId === 'f2') {
+        this.parkCurrentBill();
+      } else if (actionId === 'f3') {
+        this.openHeldBillsModal();
+      } else if (actionId === 'f4') {
+        this.clearCart();
+      } else if (actionId === 'f9') {
+        if (!this.isCashier) {
+          this.togglePosMode();
+        } else {
+          this.showToast('Restricted', 'POS Mode toggle is restricted to managers & admins', 'warning');
+        }
+      } else if (actionId === 'f11') {
+        this.toggleFullScreen();
+      } else if (actionId === 'f12') {
+        if (this.cart.length > 0) {
+          this.openPaymentModal();
+        } else {
+          this.showToast('Cart Empty', 'Add products to cart before processing payment [F12]', 'warning');
+        }
+      } else if (actionId === 'enter') {
+        if (this.paymentModal.show) {
+          this.proceedToCheckout();
+        } else if (this.showOrderComplete) {
+          this.closeOrderComplete();
+        } else {
+          this.showToast('Enter Key', 'Used in Payment checkout to finalize, or on Receipt to start new sale', 'info');
+        }
+      } else if (actionId === 'ctrl_l') {
+        this.isTerminalLocked = true;
+      } else if (actionId === 'shift_esc') {
+        this.handleLogout();
+      } else if (actionId === 'esc') {
+        // Closed modal
+      }
+    },
+
     setPosMode(mode) {
       this.posMode = mode;
       localStorage.setItem('posMode', mode);
@@ -2062,6 +2474,35 @@ export default {
         return;
       }
 
+      // Shortcuts Cheatsheet Modal is Open: Test keys live or close with Escape
+      if (this.showShortcutsModal) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          this.closeShortcutsModal();
+          return;
+        }
+        const isSearchInput = e.target && e.target === this.$refs.shortcutSearchRef;
+        const isSpecialKey = [
+          'F1', 'F2', 'F3', 'F4', 'F9', 'F11', 'F12', 'Enter'
+        ].includes(e.key) ||
+        ((e.ctrlKey || e.metaKey) && (e.key === 'l' || e.key === 'L')) ||
+        (e.shiftKey && e.key === 'Escape');
+
+        if (isSpecialKey || !isSearchInput) {
+          if (isSpecialKey) e.preventDefault();
+          this.handleKeyInShortcutModal(e);
+          return;
+        }
+        return;
+      }
+
+      // Quick access: Press '?' anywhere to open Shortcuts modal
+      if (e.key === '?' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        this.openShortcutsModal();
+        return;
+      }
+
       // 1. Order Complete / Receipt Dialog is Open: F12, Enter, F1, Space, or Escape starts New Sale
       if (this.showOrderComplete) {
         if (e.key === 'F12' || e.key === 'Enter' || e.key === 'F1' || e.key === ' ' || e.key === 'Escape') {
@@ -2436,6 +2877,46 @@ export default {
 .fullscreen-toggle-btn i {
   font-size: 1.15rem;
   color: #4f46e5;
+}
+
+/* POS Shortcut Button with Green Gradient */
+.shortcut-btn-green {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 13px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: 1px solid #059669;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.shortcut-btn-green:hover {
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.45);
+}
+
+.shortcut-btn-green:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
+}
+
+.shortcut-btn-green i {
+  font-size: 1.15rem;
+  color: #ffffff;
+}
+
+.shortcut-btn-green .sc-btn-label {
+  letter-spacing: 0.2px;
 }
 
 /* Shortcuts Legend */
@@ -4724,5 +5205,520 @@ export default {
   .payment-modal-body { flex-direction: column; }
   .pay-left-col, .pay-right-col { width: 100%; border-right: none; }
   .pay-left-col { border-bottom: 1px solid #e2e8f0; }
+}
+
+/* ==================== INTERACTIVE SHORTCUTS MODAL ==================== */
+.shortcuts-dialog {
+  background: #ffffff;
+  border-radius: 20px;
+  width: 900px;
+  max-width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  animation: scModalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scModalPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.shortcuts-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 26px;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sc-title-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sc-header-icon-ring {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.sc-header-icon-ring i {
+  font-size: 1.6rem;
+}
+
+.sc-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.sc-badge-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.sc-badge-pill.green {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.sc-title-box h3 {
+  margin: 0;
+  font-size: 1.22rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* Interactive Live Tester Strip */
+.sc-live-tester {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 26px;
+  background: #0f172a;
+  color: #ffffff;
+  border-bottom: 1px solid #1e293b;
+  font-size: 0.84rem;
+  transition: all 0.25s ease;
+}
+
+.sc-live-tester.detected-active {
+  background: #064e3b;
+  border-bottom-color: #059669;
+}
+
+.sc-tester-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tester-pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+  animation: pulseBeacon 1.5s infinite;
+}
+
+@keyframes pulseBeacon {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.tester-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #cbd5e1;
+}
+
+.tester-prompt i {
+  font-size: 1.1rem;
+  color: #34d399;
+}
+
+.tester-detected-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tester-prefix {
+  font-weight: 600;
+  color: #a7f3d0;
+}
+
+.tester-kbd {
+  background: #10b981;
+  color: #ffffff;
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  box-shadow: 0 2px 0 #047857;
+}
+
+.tester-action-text {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.tester-hint {
+  font-size: 0.76rem;
+  color: #94a3b8;
+}
+
+.tester-hint kbd {
+  background: #334155;
+  color: #f8fafc;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Controls: Search & Category Tabs */
+.sc-controls-row {
+  padding: 14px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sc-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.sc-search-wrap i {
+  position: absolute;
+  left: 12px;
+  font-size: 1.2rem;
+  color: #64748b;
+  pointer-events: none;
+}
+
+.sc-search-wrap input {
+  width: 100%;
+  height: 38px;
+  padding: 0 36px 0 36px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  font-size: 0.86rem;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.sc-search-wrap input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.sc-search-clear {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.sc-search-clear:hover {
+  color: #0f172a;
+}
+
+.sc-category-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.sc-tab-btn {
+  padding: 5px 13px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sc-tab-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.sc-tab-btn.active {
+  background: #059669;
+  border-color: #059669;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+}
+
+/* Shortcuts Grid */
+.sc-grid-container {
+  padding: 20px 26px;
+  overflow-y: auto;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(370px, 1fr));
+  gap: 14px;
+  background: #f8fafc;
+}
+
+.sc-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 13px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.sc-card:hover {
+  border-color: #10b981;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.12);
+}
+
+.sc-card.card-highlighted {
+  border-color: #10b981;
+  background: #f0fdf4;
+  box-shadow: 0 0 0 2px #10b981, 0 8px 24px rgba(16, 185, 129, 0.2);
+  transform: scale(1.02);
+}
+
+.sc-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sc-key-pill kbd {
+  display: inline-block;
+  padding: 4px 11px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff;
+  border-radius: 7px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  box-shadow: 0 3px 0 #090d16, 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.sc-card.card-highlighted .sc-key-pill kbd {
+  background: linear-gradient(180deg, #10b981 0%, #047857 100%);
+  box-shadow: 0 3px 0 #064e3b, 0 4px 8px rgba(16, 185, 129, 0.4);
+}
+
+.sc-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sc-tag-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  text-transform: uppercase;
+}
+
+.sc-tag-pill.scan { background: #e0f2fe; color: #0284c7; }
+.sc-tag-pill.checkout { background: #ecfdf5; color: #059669; }
+.sc-tag-pill.bill { background: #fef3c7; color: #d97706; }
+.sc-tag-pill.cart { background: #f3e8ff; color: #7c3aed; }
+.sc-tag-pill.system { background: #f1f5f9; color: #475569; }
+
+.sc-context-pill {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #f8fafc;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.sc-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sc-card-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sc-card-desc {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.sc-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-sc-run {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-sc-run:hover {
+  background: #10b981;
+  border-color: #059669;
+  color: #ffffff;
+}
+
+.btn-sc-run i {
+  font-size: 0.95rem;
+}
+
+.sc-run-hint {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.sc-empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 44px 16px;
+  text-align: center;
+  color: #64748b;
+}
+
+.sc-empty-state i {
+  font-size: 2.8rem;
+  color: #cbd5e1;
+  margin-bottom: 10px;
+}
+
+.btn-sc-reset {
+  margin-top: 10px;
+  padding: 7px 15px;
+  background: #059669;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+/* Modal Footer */
+.sc-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 26px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+}
+
+.sc-footer-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.sc-footer-info i {
+  font-size: 1.1rem;
+  color: #10b981;
+}
+
+.btn-sc-close {
+  padding: 7px 18px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-sc-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+@media (max-width: 768px) {
+  .shortcuts-dialog {
+    width: 96vw;
+    max-height: 94vh;
+    border-radius: 14px;
+  }
+  .sc-grid-container {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+  .shortcuts-modal-header,
+  .sc-controls-row,
+  .sc-live-tester,
+  .sc-modal-footer {
+    padding: 10px 14px;
+  }
+  .sc-footer-info {
+    display: none;
+  }
+  .btn-sc-close {
+    width: 100%;
+    text-align: center;
+  }
 }
 </style>
