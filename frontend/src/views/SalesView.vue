@@ -58,8 +58,8 @@
         <div class="shortcuts-legend">
           <span class="sc-tag" title="Search / Scan Focus"><kbd>F1</kbd> Scan</span>
           <span class="sc-tag" title="Park / Hold Current Sale"><kbd>F2</kbd> Park</span>
-          <span class="sc-tag" title="Recall Held Sales" :class="{ 'has-held': heldBills.length > 0 }" @click="openHeldBillsModal">
-            <kbd>F3</kbd> Held ({{ heldBills.length }})
+          <span class="sc-tag" title="Recall Held Sales" :class="{ 'has-held': heldBillsCount > 0 }" @click="openHeldBillsModal">
+            <kbd>F3</kbd> Held ({{ heldBillsCount }})
           </span>
           <span class="sc-tag" title="Pay and Print"><kbd>F12</kbd> Pay</span>
         </div>
@@ -136,12 +136,12 @@
         <!-- Recall Held Bills Button -->
         <button
           class="btn-recall-bill"
-          :class="{ 'btn-recall-active': heldBills.length > 0 }"
+          :class="{ 'btn-recall-active': heldBillsCount > 0 }"
           @click="openHeldBillsModal"
           title="Recall held bills (F3)"
         >
           <i class="material-icons">history</i>
-          <span>Held Bills ({{ heldBills.length }}) [F3]</span>
+          <span>Held Bills ({{ heldBillsCount }}) [F3]</span>
         </button>
       </div>
     </div>
@@ -819,19 +819,19 @@
           <div class="held-header">
             <div class="held-title-box">
               <i class="material-icons">history</i>
-              <h3>Parked Sales Register ({{ heldBills.length }})</h3>
+              <h3>Parked Sales Register ({{ heldBillsCount }})</h3>
             </div>
             <button class="btn-modal-x" @click="heldBillsModal = false"><i class="material-icons">close</i></button>
           </div>
 
           <div class="held-body">
-            <div v-if="heldBills.length === 0" class="held-empty">
+            <div v-if="heldBillsCount === 0" class="held-empty">
               <i class="material-icons">inbox</i>
               <p>No parked bills currently on hold.</p>
             </div>
 
             <div v-else class="held-list">
-              <div v-for="(bill, index) in heldBills" :key="bill.id" class="held-card">
+              <div v-for="(bill, index) in (heldBills || [])" :key="bill.id" class="held-card">
                 <div class="held-card-header">
                   <div class="held-card-meta">
                     <span class="held-badge">Bill #{{ index + 1 }}</span>
@@ -1059,6 +1059,9 @@ export default {
     };
   },
   computed: {
+    heldBillsCount() {
+      return Array.isArray(this.heldBills) ? this.heldBills.length : 0;
+    },
     cartTotalItems() {
       return this.cart.reduce((sum, item) => sum + item.quantity, 0);
     },
@@ -1461,14 +1464,19 @@ export default {
     },
 
     restoreHeldBillsFromStorage() {
-      const saved = localStorage.getItem('peak_held_bills');
-      if (saved) {
-        try {
-          this.heldBills = JSON.parse(saved);
-        } catch (e) {
-          this.heldBills = [];
+      try {
+        const saved = localStorage.getItem('peak_held_bills');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            this.heldBills = parsed;
+            return;
+          }
         }
+      } catch (e) {
+        console.error('Error restoring held bills:', e);
       }
+      this.heldBills = [];
     },
 
     // ==================== PAYMENT MODAL & CASH CALCULATOR ====================
