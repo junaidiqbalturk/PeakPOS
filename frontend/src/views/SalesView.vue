@@ -1,6 +1,6 @@
 <template>
   <div class="pos-layout" :class="{ 'mode-counter': posMode === 'counter', 'mode-visual': posMode === 'visual' }">
-    <!-- Top Enterprise Navigation Header -->
+    <!-- Top Enterprise Navigation Header (Unified & Clean) -->
     <header class="pos-header">
       <div class="header-left">
         <div class="brand-container">
@@ -18,25 +18,25 @@
         <div class="mode-selector">
           <button
             class="mode-btn"
+            :class="{ active: posMode === 'counter' }"
+            @click="setPosMode('counter')"
+            title="Split-Pane High-Speed Counter [F9]"
+          >
+            <i class="material-icons">flash_on</i>
+            <span>Register [F9]</span>
+          </button>
+          <button
+            class="mode-btn"
             :class="{ active: posMode === 'visual' }"
             @click="setPosMode('visual')"
-            title="Visual Catalog Mode (Cards & Images)"
+            title="Touch Visual Catalog Mode"
           >
             <i class="material-icons">grid_view</i>
             <span>Touch Catalog</span>
           </button>
-          <button
-            class="mode-btn"
-            :class="{ active: posMode === 'counter' }"
-            @click="setPosMode('counter')"
-            title="High-Speed Counter Mode (Dense Data Table & Quick Barcode)"
-          >
-            <i class="material-icons">flash_on</i>
-            <span>High-Speed Counter [F9]</span>
-          </button>
         </div>
 
-        <!-- Quick View Navigation Links -->
+        <!-- Navigation Links -->
         <nav class="header-nav">
           <router-link to="/dashboard" class="nav-pill" title="Dashboard">
             <i class="material-icons">dashboard</i>
@@ -54,14 +54,14 @@
       </div>
 
       <div class="header-right">
-        <!-- Shortcuts Quick Hint Bar -->
+        <!-- Quick Action Shortcuts -->
         <div class="shortcuts-legend">
           <span class="sc-tag" title="Search / Scan Focus"><kbd>F1</kbd> Scan</span>
-          <span class="sc-tag" title="Park / Hold Current Sale"><kbd>F2</kbd> Park</span>
+          <span class="sc-tag" title="Park / Hold Current Sale" @click="parkCurrentBill"><kbd>F2</kbd> Park</span>
           <span class="sc-tag" title="Recall Held Sales" :class="{ 'has-held': heldBillsCount > 0 }" @click="openHeldBillsModal">
             <kbd>F3</kbd> Held ({{ heldBillsCount }})
           </span>
-          <span class="sc-tag" title="Pay and Print"><kbd>F12</kbd> Pay</span>
+          <span class="sc-tag" title="Pay and Print" @click="openPaymentModal"><kbd>F12</kbd> Pay</span>
           <span class="sc-tag lock-tag" @click="isTerminalLocked = true" title="Quick Lock Terminal & Switch Cashier [Ctrl+L]"><kbd>Ctrl+L</kbd> Lock</span>
         </div>
 
@@ -91,266 +91,403 @@
       </div>
     </header>
 
-    <!-- Sub-Header: Customer & Prescriber Quick Information Bar -->
-    <div class="customer-strip">
-      <div class="customer-fields">
-        <div class="input-with-icon">
-          <i class="material-icons">person_search</i>
-          <input
-            type="text"
-            v-model="customer.name"
-            placeholder="Customer Name (Walk-in)"
-            class="strip-input"
-          />
-        </div>
-        <div class="input-with-icon">
-          <i class="material-icons">phone</i>
-          <input
-            type="tel"
-            v-model="customer.phone"
-            placeholder="Mobile / Phone (Loyalty / Ledger)"
-            class="strip-input"
-          />
-        </div>
-        <div class="input-with-icon" v-if="posMode === 'counter'">
-          <i class="material-icons">medical_services</i>
-          <input
-            type="text"
-            v-model="customer.doctor"
-            placeholder="Doctor / Prescriber (Optional)"
-            class="strip-input"
-          />
-        </div>
-      </div>
-
-      <div class="strip-actions">
-        <!-- Hold / Park Sale Button -->
-        <button
-          class="btn-park-bill"
-          :disabled="cart.length === 0"
-          @click="parkCurrentBill"
-          title="Hold current bill (F2)"
-        >
-          <i class="material-icons">pause_circle_outline</i>
-          <span>Park Bill [F2]</span>
-        </button>
-
-        <!-- Recall Held Bills Button -->
-        <button
-          class="btn-recall-bill"
-          :class="{ 'btn-recall-active': heldBillsCount > 0 }"
-          @click="openHeldBillsModal"
-          title="Recall held bills (F3)"
-        >
-          <i class="material-icons">history</i>
-          <span>Held Bills ({{ heldBillsCount }}) [F3]</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- MAIN BODY: Conditional Layout Based On POS Mode -->
-
-    <!-- ==================== MODE 1: HIGH-SPEED COUNTER MODE ==================== -->
-    <main v-if="posMode === 'counter'" class="counter-main">
-      <!-- Rapid Search & Barcode Scan Input Bar -->
-      <div class="counter-scanner-bar">
-        <div class="barcode-input-container">
-          <i class="material-icons scanner-icon">qr_code_scanner</i>
-          <input
-            ref="barcodeInput"
-            type="text"
-            v-model="searchTerm"
-            @keydown.enter.prevent="handleBarcodeOrEnterSearch"
-            placeholder="Scan Barcode or Type Product / Formula / Salt Name and Press [Enter]..."
-            class="counter-scanner-field"
-            autofocus
-          />
-          <button v-if="searchTerm" @click="clearSearch" class="scanner-clear-btn">
-            <i class="material-icons">close</i>
-          </button>
-        </div>
-
-        <div class="scanner-stats">
-          <span class="active-bill-tag">
-            <i class="material-icons">shopping_cart</i>
-            Line Items: <strong>{{ cart.length }}</strong> &bull; Total Units: <strong>{{ cartTotalItems }}</strong>
-          </span>
-          <button class="btn-clear-table" v-if="cart.length > 0" @click="clearCart">
-            <i class="material-icons">delete_sweep</i> Clear [F4]
-          </button>
-        </div>
-      </div>
-
-      <!-- Live Search Instant Dropdown Results (When typing) -->
-      <div v-if="searchTerm && !exactMatchFound" class="instant-search-dropdown">
-        <div class="dropdown-header">
-          <span>Search Matches for "{{ searchTerm }}" (Click or Press Enter to Add)</span>
-          <button @click="clearSearch" class="dropdown-close"><i class="material-icons">close</i></button>
-        </div>
-        <div class="dropdown-list">
-          <div
-            v-for="p in filteredProducts.slice(0, 8)"
-            :key="p.id"
-            class="dropdown-item"
-            :class="{ 'item-oos': p.stock <= 0 }"
-            @click="addAndClear(p)"
-          >
-            <div class="item-main">
-              <span class="item-name">{{ p.name }}</span>
-              <span class="item-cat">{{ getCategoryName(p.category_id) }}</span>
+    <!-- ==================== MODE 1: MODERN SPLIT-PANE HYBRID (Square / Shopify POS) ==================== -->
+    <main v-if="posMode === 'counter'" class="split-register-layout">
+      <!-- LEFT PANE (62%): High-Speed Working Area & Barcode Center -->
+      <section class="register-left-pane">
+        <!-- Top Utility Bar: Integrated Customer Pill & Search -->
+        <div class="register-top-bar">
+          <!-- Customer Selection Chip with Popover Toggle -->
+          <div class="customer-picker-pill" :class="{ 'has-customer': customer.name }">
+            <i class="material-icons">person</i>
+            <div class="cust-pill-text">
+              <span class="cust-name-label">{{ customer.name || 'Walk-in Customer' }}</span>
+              <span class="cust-phone-label" v-if="customer.phone">{{ customer.phone }}</span>
             </div>
-            <div class="item-right">
-              <span class="item-stock" :class="getStockClass(p)">{{ p.stock }} in stock</span>
-              <span class="item-price">${{ p.price.toFixed(2) }}</span>
-              <button class="btn-dropdown-add" :disabled="p.stock <= 0">Add</button>
+            <button class="btn-edit-customer" @click="customerPopoverOpen = !customerPopoverOpen" title="Edit Customer Details">
+              <i class="material-icons">{{ customerPopoverOpen ? 'expand_less' : 'edit' }}</i>
+            </button>
+          </div>
+
+          <!-- Customer Edit Popover -->
+          <div v-if="customerPopoverOpen" class="customer-popover-card">
+            <div class="popover-header">
+              <span>Customer / Loyalty Profile</span>
+              <button @click="customerPopoverOpen = false" class="popover-close"><i class="material-icons">close</i></button>
+            </div>
+            <div class="popover-body">
+              <div class="popover-input-group">
+                <label>Customer Name</label>
+                <input type="text" v-model="customer.name" placeholder="Walk-in Customer" class="popover-input" />
+              </div>
+              <div class="popover-input-group">
+                <label>Mobile Number (Loyalty / Ledger)</label>
+                <input type="tel" v-model="customer.phone" placeholder="e.g. +1 555 0192" class="popover-input" />
+              </div>
+              <div class="popover-input-group">
+                <label>Prescriber / Doctor (Optional)</label>
+                <input type="text" v-model="customer.doctor" placeholder="Dr. Name" class="popover-input" />
+              </div>
+              <button class="btn-popover-save" @click="customerPopoverOpen = false">Done</button>
+            </div>
+          </div>
+
+          <!-- Line Stats & Quick Actions -->
+          <div class="register-quick-stats">
+            <div class="stat-bubble">
+              <i class="material-icons">shopping_bag</i>
+              <span><strong>{{ cart.length }}</strong> Items (<strong>{{ cartTotalItems }}</strong> Units)</span>
+            </div>
+            <button class="btn-clean-cart" v-if="cart.length > 0" @click="clearCart" title="Clear Bill [F4]">
+              <i class="material-icons">delete_sweep</i> Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- Prominent Hero Barcode & Search Input -->
+        <div class="hero-search-container">
+          <div class="hero-search-box">
+            <i class="material-icons hero-scan-ico">qr_code_scanner</i>
+            <input
+              ref="barcodeInput"
+              type="text"
+              v-model="searchTerm"
+              @keydown.enter.prevent="handleBarcodeOrEnterSearch"
+              placeholder="Scan Barcode or Type Product / Formula / Salt Name and Press [Enter]..."
+              class="hero-search-input"
+              autofocus
+            />
+            <span class="f1-badge"><kbd>F1</kbd></span>
+            <button v-if="searchTerm" @click="clearSearch" class="hero-clear-btn">
+              <i class="material-icons">close</i>
+            </button>
+          </div>
+
+          <!-- Quick Category / Filter Chips Bar -->
+          <div class="quick-filter-chips">
+            <button
+              class="filter-chip"
+              :class="{ active: activeCategory === 'all' }"
+              @click="filterByCategory('all')"
+            >
+              <i class="material-icons">apps</i> All
+            </button>
+            <button
+              class="filter-chip"
+              :class="{ active: activeCategory === 'popular' }"
+              @click="filterByCategory('popular')"
+            >
+              <i class="material-icons">trending_up</i> Top Sellers
+            </button>
+            <button
+              class="filter-chip"
+              :class="{ active: activeCategory === 'sale' }"
+              @click="filterByCategory('sale')"
+            >
+              <i class="material-icons">local_offer</i> On Sale
+            </button>
+            <button
+              v-for="cat in categories.slice(0, 5)"
+              :key="cat.id"
+              class="filter-chip"
+              :class="{ active: activeCategory === String(cat.id) }"
+              @click="filterByCategory(String(cat.id))"
+            >
+              {{ cat.name }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Instant Search Dropdown (When typing) -->
+        <div v-if="searchTerm && !exactMatchFound" class="instant-search-dropdown-split">
+          <div class="dropdown-header">
+            <span>Matches for "{{ searchTerm }}" (Click or Press Enter to Add)</span>
+            <button @click="clearSearch" class="dropdown-close"><i class="material-icons">close</i></button>
+          </div>
+          <div class="dropdown-list">
+            <div
+              v-for="p in filteredProducts.slice(0, 8)"
+              :key="p.id"
+              class="dropdown-item"
+              :class="{ 'item-oos': p.stock <= 0 }"
+              @click="addAndClear(p)"
+            >
+              <div class="item-main">
+                <span class="item-name">{{ p.name }}</span>
+                <span class="item-cat">{{ getCategoryName(p.category_id) }} &bull; SKU #{{ p.id }}</span>
+              </div>
+              <div class="item-right">
+                <span class="item-stock" :class="getStockClass(p)">{{ p.stock }} in stock</span>
+                <span class="item-price">${{ p.price.toFixed(2) }}</span>
+                <button class="btn-dropdown-add" :disabled="p.stock <= 0">Add</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- High-Speed Bill Table -->
-      <div class="counter-table-container">
-        <table class="counter-table">
-          <thead>
-            <tr>
-              <th style="width: 45px;">#</th>
-              <th style="width: 110px;">SKU / Code</th>
-              <th>Item Name &bull; Generic / Description</th>
-              <th style="width: 110px;">Category</th>
-              <th style="width: 100px;">Available</th>
-              <th style="width: 110px;">Unit Price</th>
-              <th style="width: 140px;">Quantity</th>
-              <th style="width: 120px;">Line Total</th>
-              <th style="width: 50px;"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="cart.length === 0" class="row-empty">
-              <td colspan="9">
-                <div class="table-empty-box">
-                  <i class="material-icons">barcode_reader</i>
-                  <h3>Sales Register Ready</h3>
-                  <p>Scan a barcode or use the search field above <kbd>[F1]</kbd> to add items to this sale.</p>
-                </div>
-              </td>
-            </tr>
+        <!-- Spacious Modern Cart Table Area -->
+        <div class="split-table-wrapper">
+          <table class="split-cart-table">
+            <thead>
+              <tr>
+                <th style="width: 44px;">#</th>
+                <th>Item & Details</th>
+                <th style="width: 110px;">Stock</th>
+                <th style="width: 110px;">Unit Price</th>
+                <th style="width: 140px;">Quantity</th>
+                <th style="width: 120px; text-align: right;">Total</th>
+                <th style="width: 44px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="cart.length === 0" class="split-table-empty">
+                <td colspan="7">
+                  <div class="empty-register-art">
+                    <div class="art-icon-ring">
+                      <i class="material-icons">barcode_reader</i>
+                    </div>
+                    <h3>Ready for Next Customer</h3>
+                    <p>Scan barcode gun or start typing in the search box above <kbd>[F1]</kbd>.</p>
+                    <div class="ready-tips">
+                      <span><kbd>Enter</kbd> Add item</span>
+                      <span><kbd>F2</kbd> Park</span>
+                      <span><kbd>F12</kbd> Instant Pay</span>
+                      <span><kbd>Ctrl+L</kbd> Cashier Switch</span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
 
-            <tr v-for="(item, idx) in cart" :key="item.id" class="counter-item-row">
-              <td class="col-index">{{ idx + 1 }}</td>
-              <td class="col-sku"><span class="sku-code">#{{ item.id }}</span></td>
-              <td class="col-name">
-                <div class="cell-product-meta">
-                  <span class="product-title">{{ item.name }}</span>
-                  <span class="product-generic" v-if="item.description">{{ item.description }}</span>
-                </div>
-              </td>
-              <td class="col-cat">
-                <span class="pill-category">{{ getCategoryName(item.category_id) }}</span>
-              </td>
-              <td class="col-stock">
-                <span class="stock-indicator" :class="getStockClass(item)">
-                  {{ item.stock }} in stock
+              <tr v-for="(item, idx) in cart" :key="item.id" class="split-item-row">
+                <td class="col-idx">{{ idx + 1 }}</td>
+                <td class="col-item-details">
+                  <div class="item-title-block">
+                    <span class="item-name-text">{{ item.name }}</span>
+                    <div class="item-subtags">
+                      <span class="subtag-sku">SKU: {{ item.barcode || ('#' + item.id) }}</span>
+                      <span class="subtag-category">{{ getCategoryName(item.category_id) }}</span>
+                      <span class="subtag-desc" v-if="item.description">{{ item.description }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="col-stock">
+                  <span class="stock-pill-badge" :class="getStockClass(item)">
+                    {{ item.stock }} in stock
+                  </span>
+                </td>
+                <td class="col-price">
+                  <div class="price-input-box">
+                    <span class="curr-sign">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      v-model.number="item.price"
+                      class="table-price-input"
+                      @change="saveCartToStorage"
+                    />
+                  </div>
+                </td>
+                <td class="col-qty">
+                  <div class="stepper-box">
+                    <button class="step-btn" @click="decreaseQuantity(idx)" :disabled="item.quantity <= 1">
+                      <i class="material-icons">remove</i>
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      :max="item.stock"
+                      v-model.number="item.quantity"
+                      class="step-input"
+                      @change="validateItemQuantity(item)"
+                    />
+                    <button class="step-btn" @click="increaseQuantity(idx)" :disabled="item.quantity >= item.stock">
+                      <i class="material-icons">add</i>
+                    </button>
+                  </div>
+                </td>
+                <td class="col-line-total">
+                  <span class="item-total-amount">${{ (item.price * item.quantity).toFixed(2) }}</span>
+                </td>
+                <td class="col-del">
+                  <button class="btn-del-row" @click="removeFromCart(idx)" title="Remove item">
+                    <i class="material-icons">close</i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- RIGHT PANE (38%): Fixed Action & Tender Summary Slip -->
+      <aside class="register-right-pane">
+        <div class="order-slip-card">
+          <!-- Order Slip Header -->
+          <div class="slip-header">
+            <div class="slip-title-meta">
+              <i class="material-icons">receipt_long</i>
+              <h3>Active Sale Ticket</h3>
+            </div>
+            <div class="slip-actions-top">
+              <button
+                class="btn-slip-action"
+                :disabled="cart.length === 0"
+                @click="parkCurrentBill"
+                title="Hold / Park Bill (F2)"
+              >
+                <i class="material-icons">pause</i> Park [F2]
+              </button>
+              <button
+                class="btn-slip-action"
+                :class="{ 'has-held-badge': heldBillsCount > 0 }"
+                @click="openHeldBillsModal"
+                title="Recall Parked Bills (F3)"
+              >
+                <i class="material-icons">history</i> Held ({{ heldBillsCount }})
+              </button>
+            </div>
+          </div>
+
+          <!-- Customer Loyalty Info Card inside Ticket -->
+          <div class="slip-customer-badge">
+            <div class="cust-avatar-ring">
+              <i class="material-icons">person</i>
+            </div>
+            <div class="cust-meta-block">
+              <span class="cust-lead-name">{{ customer.name || 'Walk-in Customer' }}</span>
+              <span class="cust-lead-sub">
+                {{ customer.phone ? ('📞 ' + customer.phone) : 'Standard Tier &bull; No Loyalty Account' }}
+              </span>
+            </div>
+            <button class="btn-swap-cust" @click="customerPopoverOpen = !customerPopoverOpen">
+              Change
+            </button>
+          </div>
+
+          <!-- Financial Calculation Breakdown -->
+          <div class="slip-breakdown">
+            <div class="breakdown-row">
+              <span class="row-label">Subtotal</span>
+              <span class="row-value">${{ calculateSubtotal().toFixed(2) }}</span>
+            </div>
+
+            <!-- Discount Selector -->
+            <div class="breakdown-row discount-row">
+              <div class="row-label-with-icon">
+                <i class="material-icons">local_offer</i>
+                <span>Discount</span>
+              </div>
+              <div class="discount-control">
+                <select v-model="selectedDiscount" class="slip-discount-select">
+                  <option :value="null">None (0%)</option>
+                  <option v-for="d in discounts" :key="d.id" :value="d.id">
+                    {{ d.name }} ({{ d.discount_type === 'percentage' ? d.value + '%' : '$' + d.value }})
+                  </option>
+                </select>
+                <span class="discount-deduct-val" v-if="selectedDiscount">
+                  -${{ calculateDiscountAmount().toFixed(2) }}
                 </span>
-              </td>
-              <td class="col-price">
-                <div class="price-input-cell">
-                  <span class="curr">$</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    v-model.number="item.price"
-                    class="cell-price-input"
-                    @change="saveCartToStorage"
-                  />
-                </div>
-              </td>
-              <td class="col-qty">
-                <div class="counter-qty-box">
-                  <button class="btn-qty-mini" @click="decreaseQuantity(idx)" :disabled="item.quantity <= 1">
-                    <i class="material-icons">remove</i>
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    :max="item.stock"
-                    v-model.number="item.quantity"
-                    class="qty-field"
-                    @change="validateItemQuantity(item)"
-                  />
-                  <button class="btn-qty-mini" @click="increaseQuantity(idx)" :disabled="item.quantity >= item.stock">
-                    <i class="material-icons">add</i>
-                  </button>
-                </div>
-              </td>
-              <td class="col-total">
-                <span class="line-sum">${{ (item.price * item.quantity).toFixed(2) }}</span>
-              </td>
-              <td class="col-action">
-                <button class="btn-remove-row" @click="removeFromCart(idx)" title="Remove item">
-                  <i class="material-icons">delete_outline</i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Bottom Billing Cockpit -->
-      <footer class="counter-footer">
-        <div class="footer-left-meta">
-          <div class="meta-stat-pill">
-            <span class="lbl">Items:</span>
-            <span class="val">{{ cart.length }}</span>
-          </div>
-          <div class="meta-stat-pill">
-            <span class="lbl">Units:</span>
-            <span class="val">{{ cartTotalItems }}</span>
-          </div>
-          <div class="meta-stat-pill" v-if="selectedDiscount">
-            <span class="lbl">Discount Applied:</span>
-            <span class="val-discount">-${{ calculateDiscountAmount().toFixed(2) }}</span>
-          </div>
-        </div>
-
-        <div class="footer-center-discount">
-          <div class="discount-box">
-            <i class="material-icons">local_offer</i>
-            <span class="disc-label">Discount:</span>
-            <select v-model="selectedDiscount" class="counter-discount-select">
-              <option :value="null">None (0%)</option>
-              <option v-for="d in discounts" :key="d.id" :value="d.id">
-                {{ d.name }} ({{ d.discount_type === 'percentage' ? d.value + '%' : '$' + d.value }})
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <div class="footer-right-billing">
-          <div class="financial-strip">
-            <div class="fin-box">
-              <span class="fin-lbl">Subtotal</span>
-              <span class="fin-val">${{ calculateSubtotal().toFixed(2) }}</span>
+              </div>
             </div>
-            <div class="fin-box">
-              <span class="fin-lbl">Tax (7%)</span>
-              <span class="fin-val">${{ calculateTax().toFixed(2) }}</span>
+
+            <div class="breakdown-row">
+              <span class="row-label">Estimated Tax (7%)</span>
+              <span class="row-value">${{ calculateTax().toFixed(2) }}</span>
             </div>
-            <div class="fin-box net-box">
-              <span class="fin-lbl">Net Due</span>
-              <span class="fin-val-grand">${{ calculateTotal().toFixed(2) }}</span>
+
+            <div class="slip-divider"></div>
+
+            <!-- Hero Net Total Due -->
+            <div class="breakdown-hero-total">
+              <div class="hero-total-label">
+                <span>Total Amount Due</span>
+                <span class="items-summary-note">{{ cart.length }} items &bull; {{ cartTotalItems }} units</span>
+              </div>
+              <div class="hero-total-price">
+                <span class="hero-curr">$</span>
+                <span class="hero-val">{{ calculateTotal().toFixed(2) }}</span>
+              </div>
             </div>
           </div>
 
-          <button
-            class="btn-counter-pay"
-            :disabled="cart.length === 0 || processingOrder"
-            @click="openPaymentModal"
-          >
-            <i class="material-icons">payments</i>
-            <span>Pay &bull; [F12]</span>
-          </button>
+          <!-- Quick Cash Preset 1-Click Buttons -->
+          <div class="quick-cash-presets">
+            <span class="preset-label">1-Click Cash Presets</span>
+            <div class="preset-buttons-grid">
+              <button
+                class="btn-cash-preset exact"
+                :disabled="cart.length === 0"
+                @click="oneClickCashPay('exact')"
+              >
+                Exact Cash
+              </button>
+              <button
+                class="btn-cash-preset"
+                :disabled="cart.length === 0"
+                @click="oneClickCashPay(10)"
+              >
+                $10
+              </button>
+              <button
+                class="btn-cash-preset"
+                :disabled="cart.length === 0"
+                @click="oneClickCashPay(20)"
+              >
+                $20
+              </button>
+              <button
+                class="btn-cash-preset"
+                :disabled="cart.length === 0"
+                @click="oneClickCashPay(50)"
+              >
+                $50
+              </button>
+              <button
+                class="btn-cash-preset"
+                :disabled="cart.length === 0"
+                @click="oneClickCashPay(100)"
+              >
+                $100
+              </button>
+              <button
+                class="btn-cash-preset card-preset"
+                :disabled="cart.length === 0"
+                @click="oneClickCardPay"
+              >
+                <i class="material-icons">credit_card</i> Card
+              </button>
+            </div>
+          </div>
+
+          <!-- Massive Primary Pay Button -->
+          <div class="slip-pay-action">
+            <button
+              class="btn-massive-pay"
+              :disabled="cart.length === 0 || processingOrder"
+              @click="openPaymentModal"
+            >
+              <div class="pay-btn-content">
+                <i class="material-icons">payments</i>
+                <span>PAY &bull; [F12]</span>
+              </div>
+              <span class="pay-btn-amount">${{ calculateTotal().toFixed(2) }}</span>
+            </button>
+          </div>
+
+          <!-- Quick Utility Bar at Bottom of Slip -->
+          <div class="slip-bottom-bar">
+            <button class="bottom-util-btn" @click="printLastReceipt" title="Reprint Last Thermal Receipt">
+              <i class="material-icons">receipt</i> Reprint Last
+            </button>
+            <button class="bottom-util-btn" @click="openDrawerKick" title="Open Cash Drawer">
+              <i class="material-icons">point_of_sale</i> Kick Drawer
+            </button>
+            <button class="bottom-util-btn danger" :disabled="cart.length === 0" @click="clearCart" title="Void Current Bill">
+              <i class="material-icons">delete_sweep</i> Void [F4]
+            </button>
+          </div>
         </div>
-      </footer>
+      </aside>
     </main>
 
     <!-- ==================== MODE 2: TOUCH / VISUAL CATALOG MODE ==================== -->
@@ -1034,6 +1171,7 @@ export default {
         phone: '',
         doctor: ''
       },
+      customerPopoverOpen: false,
 
       // Held / Parked Bills Register
       heldBills: [],
@@ -1425,6 +1563,67 @@ export default {
     calculateTotal() {
       const total = this.calculateSubtotal() + this.calculateTax() - this.calculateDiscountAmount();
       return Math.max(0, total);
+    },
+
+    // 1-Click Fast Tender Presets for Right Pane
+    oneClickCashPay(amount) {
+      if (this.cart.length === 0) return;
+      const total = this.calculateTotal();
+      this.paymentModal.method = 'cash';
+      if (amount === 'exact') {
+        this.paymentModal.tendered = parseFloat(total.toFixed(2));
+      } else {
+        this.paymentModal.tendered = parseFloat(amount.toFixed(2));
+      }
+      this.calculateChange();
+      this.paymentModal.show = true;
+    },
+
+    oneClickCardPay() {
+      if (this.cart.length === 0) return;
+      this.paymentModal.method = 'card';
+      this.paymentModal.tendered = this.calculateTotal();
+      this.paymentModal.change = 0;
+      this.paymentModal.show = true;
+    },
+
+    async printLastReceipt() {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/api/receipts', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (response.ok) {
+          const receipts = await response.json();
+          if (receipts && receipts.length > 0) {
+            const latest = receipts[0];
+            this.orderSummary = {
+              order_id: latest.order_id || latest.receipt_id,
+              items: latest.snapshot?.items || [],
+              subtotal: latest.snapshot?.subtotal || 0,
+              tax: latest.snapshot?.tax || 0,
+              discount: latest.snapshot?.discount || 0,
+              total: latest.snapshot?.total || 0
+            };
+            this.printReceipt();
+            this.showToast('Reprinting', `Reprinting receipt #${latest.receipt_id}`, 'info');
+          } else {
+            this.showToast('No Receipts', 'No prior transactions found to reprint.', 'warning');
+          }
+        }
+      } catch (e) {
+        this.showToast('Reprint Error', 'Could not fetch prior receipt.', 'error');
+      }
+    },
+
+    async openDrawerKick() {
+      const res = await escpos.kickCashDrawer();
+      if (res.success) {
+        this.showToast('Drawer Open', 'Cash drawer pulse signal sent.', 'success');
+      } else {
+        this.showToast('Drawer Signal', 'Simulated cash drawer trigger.', 'info');
+      }
     },
 
     // ==================== BILL PARKING / HOLDING SYSTEM ====================
@@ -2302,400 +2501,1075 @@ export default {
 }
 
 /* --------------------------------------------------------------------------
-   MODE 1: HIGH-SPEED COUNTER MODE STYLING
+   MODE 1: MODERN SPLIT-PANE HYBRID (Square & Shopify POS Pro)
    -------------------------------------------------------------------------- */
-.counter-main {
+.split-register-layout {
   display: flex;
-  flex-direction: column;
   flex: 1;
   overflow: hidden;
-  background: #f8fafc;
+  background: #f1f5f9;
+  position: relative;
 }
 
-.counter-scanner-bar {
-  padding: 10px 20px;
+/* LEFT PANE (62%): High-Speed Working Area */
+.register-left-pane {
+  flex: 62;
+  display: flex;
+  flex-direction: column;
   background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  border-right: 1px solid #cbd5e1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Top Utility Bar */
+.register-top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  padding: 10px 18px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
   position: relative;
 }
 
-.barcode-input-container {
-  flex: 1;
-  max-width: 650px;
-  position: relative;
+.customer-picker-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.customer-picker-pill.has-customer {
+  background: #eef2ff;
+  border-color: #818cf8;
+}
+
+.customer-picker-pill i {
+  color: #4f46e5;
+  font-size: 1.15rem;
+}
+
+.cust-pill-text {
   display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.cust-name-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cust-phone-label {
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
+.btn-edit-customer {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
+
+.btn-edit-customer:hover {
+  color: #4f46e5;
+}
+
+/* Customer Popover */
+.customer-popover-card {
+  position: absolute;
+  top: 50px;
+  left: 18px;
+  width: 320px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+  z-index: 40;
+  overflow: hidden;
+}
+
+.popover-header {
+  padding: 10px 14px;
+  background: #f1f5f9;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 
-.scanner-icon {
-  position: absolute;
-  left: 14px;
-  color: #4f46e5;
-  font-size: 1.35rem;
-  pointer-events: none;
-}
-
-.counter-scanner-field {
-  width: 100%;
-  height: 44px;
-  background: #ffffff;
-  border: 2px solid #4f46e5;
-  border-radius: 8px;
-  padding: 0 40px 0 46px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #0f172a;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-}
-
-.scanner-clear-btn {
-  position: absolute;
-  right: 12px;
+.popover-close {
   background: none;
   border: none;
+  cursor: pointer;
   color: #94a3b8;
+}
+
+.popover-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.popover-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.popover-input-group label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.popover-input {
+  height: 34px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 0.84rem;
+  outline: none;
+}
+
+.popover-input:focus {
+  border-color: #4f46e5;
+}
+
+.btn-popover-save {
+  margin-top: 6px;
+  height: 36px;
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
   cursor: pointer;
 }
 
-.scanner-stats {
+.register-quick-stats {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-.active-bill-tag {
+.stat-bubble {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  font-size: 0.8rem;
+  color: #475569;
   background: #f1f5f9;
+  padding: 4px 10px;
   border-radius: 6px;
-  font-size: 0.82rem;
-  color: #334155;
 }
 
-.btn-clear-table {
+.stat-bubble i {
+  font-size: 1rem;
+  color: #4f46e5;
+}
+
+.btn-clean-cart {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 12px;
+  padding: 4px 10px;
   background: #fee2e2;
   color: #dc2626;
   border: none;
   border-radius: 6px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+/* Hero Search & Category Bar */
+.hero-search-container {
+  padding: 12px 18px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hero-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.hero-scan-ico {
+  position: absolute;
+  left: 14px;
+  color: #4f46e5;
+  font-size: 1.4rem;
+  pointer-events: none;
+}
+
+.hero-search-input {
+  width: 100%;
+  height: 48px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 80px 0 48px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.hero-search-input:focus {
+  background: #ffffff;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+.f1-badge {
+  position: absolute;
+  right: 40px;
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.f1-badge kbd {
+  background: #e2e8f0;
+  color: #475569;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.hero-clear-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+}
+
+.quick-filter-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.filter-chip:hover {
+  background: #eef2ff;
+  border-color: #a5b4fc;
+  color: #4338ca;
+}
+
+.filter-chip.active {
+  background: #1e293b;
+  border-color: #1e293b;
+  color: #ffffff;
+}
+
+.filter-chip i {
+  font-size: 0.95rem;
 }
 
 /* Instant Search Dropdown */
-.instant-search-dropdown {
+.instant-search-dropdown-split {
   position: absolute;
-  top: 108px;
-  left: 20px;
-  width: 650px;
+  top: 130px;
+  left: 18px;
+  right: 18px;
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 10px;
-  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.18);
-  z-index: 30;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+  z-index: 35;
   overflow: hidden;
 }
 
-.dropdown-header {
-  padding: 8px 14px;
-  background: #f1f5f9;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #475569;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.dropdown-close { background: none; border: none; cursor: pointer; color: #94a3b8; }
-
-.dropdown-list { max-height: 280px; overflow-y: auto; }
-
-.dropdown-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
-  border-bottom: 1px solid #f1f5f9;
-  cursor: pointer;
-}
-
-.dropdown-item:hover { background: #eef2ff; }
-
-.item-main { display: flex; flex-direction: column; }
-.item-name { font-weight: 700; font-size: 0.88rem; color: #0f172a; }
-.item-cat { font-size: 0.72rem; color: #64748b; }
-
-.item-right { display: flex; align-items: center; gap: 12px; }
-.item-price { font-weight: 800; font-size: 0.95rem; color: #0f172a; }
-.btn-dropdown-add {
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: #4f46e5;
-  color: #fff;
-  border: none;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-/* High-Speed Dense Table Container */
-.counter-table-container {
+/* Spacious Modern Cart Table */
+.split-table-wrapper {
   flex: 1;
   overflow-y: auto;
   background: #ffffff;
 }
 
-.counter-table {
+.split-cart-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
 
-.counter-table thead {
+.split-cart-table thead {
   position: sticky;
   top: 0;
-  background: #1e293b;
-  color: #ffffff;
+  background: #f8fafc;
+  color: #475569;
   z-index: 5;
+  border-bottom: 2px solid #e2e8f0;
 }
 
-.counter-table th {
-  padding: 10px 12px;
-  font-size: 0.76rem;
-  font-weight: 700;
+.split-cart-table th {
+  padding: 12px 14px;
+  font-size: 0.74rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  border-right: 1px solid #334155;
+  letter-spacing: 0.05em;
 }
 
-.counter-table td {
-  padding: 8px 12px;
+.split-item-row {
   border-bottom: 1px solid #e2e8f0;
-  border-right: 1px solid #f1f5f9;
-  font-size: 0.85rem;
+  transition: background 0.15s;
+}
+
+.split-item-row:hover {
+  background: #f8fafc;
+}
+
+.split-cart-table td {
+  padding: 12px 14px;
   vertical-align: middle;
 }
 
-.counter-item-row:hover { background: #f8fafc; }
+.col-idx {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
 
-.cell-product-meta { display: flex; flex-direction: column; }
-.product-title { font-weight: 700; color: #0f172a; font-size: 0.9rem; }
-.product-generic { font-size: 0.72rem; color: #64748b; }
+.item-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
 
-.sku-code {
-  font-size: 0.76rem;
+.item-name-text {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.item-subtags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.subtag-sku {
+  font-size: 0.72rem;
   font-family: monospace;
   background: #f1f5f9;
-  padding: 2px 6px;
+  padding: 1px 6px;
   border-radius: 4px;
   color: #475569;
 }
 
-.pill-category {
-  font-size: 0.74rem;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: #f1f5f9;
-  color: #475569;
+.subtag-category {
+  font-size: 0.72rem;
   font-weight: 600;
+  color: #4f46e5;
+  background: #eef2ff;
+  padding: 1px 6px;
+  border-radius: 4px;
 }
 
-.price-input-cell {
+.subtag-desc {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.stock-pill-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+  display: inline-block;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.stock-pill-badge.low-stock {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.stock-pill-badge.out-of-stock {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.price-input-box {
   display: flex;
   align-items: center;
   gap: 2px;
 }
 
-.cell-price-input {
-  width: 75px;
-  height: 30px;
+.curr-sign {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.table-price-input {
+  width: 76px;
+  height: 32px;
   background: #f8fafc;
   border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  padding: 0 4px;
+  border-radius: 6px;
+  padding: 0 6px;
+  font-size: 0.88rem;
   font-weight: 700;
   color: #0f172a;
 }
 
-.counter-qty-box {
-  display: inline-flex;
-  align-items: center;
+.table-price-input:focus {
+  border-color: #4f46e5;
   background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 1px;
 }
 
-.btn-qty-mini {
-  width: 26px;
-  height: 26px;
+.stepper-box {
+  display: inline-flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.step-btn {
+  width: 32px;
+  height: 32px;
   border: none;
-  background: #f1f5f9;
+  background: #ffffff;
+  color: #334155;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.15s;
 }
 
-.qty-field {
+.step-btn:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.step-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.step-btn i {
+  font-size: 1rem;
+}
+
+.step-input {
   width: 44px;
-  height: 26px;
+  height: 32px;
   border: none;
+  background: transparent;
   text-align: center;
   font-weight: 800;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
+  color: #0f172a;
   outline: none;
 }
 
-.line-sum {
-  font-size: 0.95rem;
+.item-total-amount {
+  font-size: 1rem;
   font-weight: 800;
   color: #0f172a;
+  display: block;
+  text-align: right;
 }
 
-.btn-remove-row {
+.btn-del-row {
   background: none;
   border: none;
   color: #94a3b8;
   cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
 }
 
-.btn-remove-row:hover { color: #dc2626; }
+.btn-del-row:hover {
+  color: #ef4444;
+}
 
-.row-empty { height: 260px; text-align: center; }
+/* Empty Art State */
+.split-table-empty {
+  height: 360px;
+  text-align: center;
+}
 
-.table-empty-box {
+.empty-register-art {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  padding: 40px;
 }
 
-.table-empty-box i { font-size: 3.5rem; margin-bottom: 8px; }
-.table-empty-box h3 { font-size: 1.15rem; font-weight: 800; color: #334155; margin: 0 0 4px 0; }
-.table-empty-box p { font-size: 0.85rem; margin: 0; }
-
-/* Bottom Billing Cockpit */
-.counter-footer {
-  height: 78px;
-  background: #ffffff;
-  border-top: 2px solid #cbd5e1;
+.art-icon-ring {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #4f46e5;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  flex-shrink: 0;
-  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.04);
+  justify-content: center;
+  margin-bottom: 16px;
 }
 
-.footer-left-meta { display: flex; align-items: center; gap: 14px; }
+.art-icon-ring i {
+  font-size: 3rem;
+}
 
-.meta-stat-pill {
+.empty-register-art h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 6px 0;
+}
+
+.empty-register-art p {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0 0 16px 0;
+}
+
+.empty-register-art kbd {
+  background: #1e293b;
+  color: #ffffff;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.ready-tips {
   display: flex;
-  align-items: baseline;
-  gap: 5px;
-  font-size: 0.85rem;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.78rem;
   color: #64748b;
 }
 
-.meta-stat-pill .val { font-size: 1rem; font-weight: 800; color: #0f172a; }
-.val-discount { font-size: 0.95rem; font-weight: 800; color: #dc2626; }
+.ready-tips kbd {
+  background: #e2e8f0;
+  color: #334155;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
 
-.footer-center-discount { display: flex; align-items: center; }
+/* ==========================================================================
+   RIGHT PANE (38%): Fixed Action & Tender Summary Slip
+   ========================================================================== */
+.register-right-pane {
+  flex: 38;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  overflow-y: auto;
+  padding: 16px;
+}
 
-.discount-box {
+.order-slip-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.slip-header {
+  padding: 14px 18px;
+  background: #1e293b;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.slip-title-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slip-title-meta i {
+  color: #818cf8;
+  font-size: 1.3rem;
+}
+
+.slip-title-meta h3 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.slip-actions-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-slip-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #334155;
+  color: #f1f5f9;
+  border: 1px solid #475569;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-slip-action:hover:not(:disabled) {
+  background: #475569;
+}
+
+.btn-slip-action.has-held-badge {
+  background: #4f46e5;
+  border-color: #6366f1;
+}
+
+.btn-slip-action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Customer Card inside Slip */
+.slip-customer-badge {
+  padding: 12px 18px;
+  background: #f8fafc;
+  border-bottom: 1px dashed #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cust-avatar-ring {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e0e7ff;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cust-meta-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.cust-lead-name {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.cust-lead-sub {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.btn-swap-cust {
+  padding: 4px 10px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #4f46e5;
+  cursor: pointer;
+}
+
+/* Slip Breakdown */
+.slip-breakdown {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.row-label {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.row-value {
+  color: #1e293b;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.discount-row {
+  background: #f8fafc;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.row-label-with-icon {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 4px 10px;
+  font-weight: 700;
+  color: #334155;
 }
 
-.discount-box i { color: #4f46e5; font-size: 1.1rem; }
-.disc-label { font-size: 0.8rem; font-weight: 700; color: #334155; }
+.row-label-with-icon i {
+  color: #4f46e5;
+  font-size: 1rem;
+}
 
-.counter-discount-select {
-  border: none;
-  background: transparent;
-  font-size: 0.82rem;
+.discount-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slip-discount-select {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 0.78rem;
   font-weight: 700;
   color: #4f46e5;
   outline: none;
 }
 
-.footer-right-billing {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+.discount-deduct-val {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #ef4444;
 }
 
-.financial-strip {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.slip-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 4px 0;
 }
 
-.fin-box {
+/* Hero Grand Total */
+.breakdown-hero-total {
+  padding: 14px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hero-total-label {
   display: flex;
   flex-direction: column;
-  text-align: right;
-  line-height: 1.1;
 }
 
-.fin-lbl { font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase; }
-.fin-val { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
+.hero-total-label span:first-child {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #4f46e5;
+}
 
-.net-box .fin-lbl { color: #4f46e5; font-weight: 800; }
-.fin-val-grand {
-  font-size: 1.6rem;
+.items-summary-note {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.hero-total-price {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.hero-curr {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.hero-val {
+  font-size: 2.1rem;
   font-weight: 900;
   color: #0f172a;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  line-height: 1;
 }
 
-.btn-counter-pay {
-  height: 52px;
-  padding: 0 28px;
-  border-radius: 10px;
-  background: #4f46e5;
-  color: #ffffff;
-  border: none;
-  font-size: 1.05rem;
+/* Quick Cash Presets */
+.quick-cash-presets {
+  padding: 12px 18px;
+  border-top: 1px dashed #cbd5e1;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preset-label {
+  font-size: 0.72rem;
   font-weight: 800;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.05em;
+}
+
+.preset-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.btn-cash-preset {
+  height: 38px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #1e293b;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+
+.btn-cash-preset:hover:not(:disabled) {
+  background: #eef2ff;
+  border-color: #818cf8;
+  color: #4338ca;
+}
+
+.btn-cash-preset.exact {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+.btn-cash-preset.exact:hover:not(:disabled) {
+  background: #d1fae5;
+}
+
+.btn-cash-preset.card-preset {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.btn-cash-preset.card-preset i {
+  font-size: 1rem;
+}
+
+.btn-cash-preset:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Massive Primary Pay Button */
+.slip-pay-action {
+  padding: 14px 18px;
+  background: #ffffff;
+}
+
+.btn-massive-pay {
+  width: 100%;
+  height: 58px;
+  border-radius: 12px;
+  background: #10b981;
+  color: #ffffff;
+  border: none;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
   transition: all 0.15s ease;
 }
 
-.btn-counter-pay:hover:not(:disabled) {
-  background: #4338ca;
+.btn-massive-pay:hover:not(:disabled) {
+  background: #059669;
   transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
 }
 
-.btn-counter-pay:disabled {
+.btn-massive-pay:disabled {
   background: #cbd5e1;
   color: #94a3b8;
   cursor: not-allowed;
   box-shadow: none;
 }
+
+.pay-btn-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.pay-btn-content i {
+  font-size: 1.5rem;
+}
+
+.pay-btn-amount {
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+/* Slip Bottom Utility Bar */
+.slip-bottom-bar {
+  padding: 10px 18px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bottom-util-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.bottom-util-btn:hover:not(:disabled) {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.bottom-util-btn.danger {
+  color: #ef4444;
+}
+
+.bottom-util-btn.danger:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.bottom-util-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------------------
+   MODE 2: TOUCH / VISUAL CATALOG MODE STYLING
+   -------------------------------------------------------------------------- */
+.pos-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.catalog-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f8fafc;
+  padding: 16px 20px 20px 24px;
+}
+
+.catalog-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.search-box {
+  flex: 1;
+  max-width: 520px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-ico {
+  position: absolute;
+  left: 14px;
+  color: #94a3b8;
+  font-size: 1.25rem;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  height: 42px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 38px 0 42px;
+  font-size: 0.88rem;
+  color: #0f172a;
 
 /* --------------------------------------------------------------------------
    MODE 2: TOUCH / VISUAL CATALOG MODE STYLING
