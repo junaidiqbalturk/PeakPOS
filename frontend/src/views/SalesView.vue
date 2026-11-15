@@ -69,7 +69,7 @@
         <button
           type="button"
           class="shortcut-btn-green"
-          @click="openShortcutsModal"
+          @click.stop.prevent="openShortcutsModal"
           title="Interactive POS Keyboard Shortcuts & Cheatsheet [?]"
         >
           <i class="material-icons">keyboard</i>
@@ -1156,7 +1156,7 @@
 
     <!-- ==================== INTERACTIVE SHORTCUTS MODAL ==================== -->
     <transition name="fade-modal">
-      <div class="modal-overlay" v-if="showShortcutsModal" @click="closeShortcutsModal">
+      <div class="modal-overlay shortcuts-modal-overlay" v-if="showShortcutsModal" @click.self="closeShortcutsModal">
         <div class="shortcuts-dialog" @click.stop>
           <!-- Modal Header -->
           <div class="shortcuts-modal-header">
@@ -1178,10 +1178,10 @@
           </div>
 
           <!-- Interactive Live Key Detector Strip -->
-          <div class="sc-live-tester" :class="{ 'detected-active': lastDetectedKeyInfo.key }">
+          <div class="sc-live-tester" :class="{ 'detected-active': !!(lastDetectedKeyInfo && lastDetectedKeyInfo.key) }">
             <div class="sc-tester-left">
               <span class="tester-pulse-dot"></span>
-              <div v-if="lastDetectedKeyInfo.key" class="tester-detected-box">
+              <div v-if="lastDetectedKeyInfo && lastDetectedKeyInfo.key" class="tester-detected-box">
                 <span class="tester-prefix">Key Pressed:</span>
                 <kbd class="tester-kbd">{{ lastDetectedKeyInfo.key }}</kbd>
                 <span class="tester-action-text">&bull; {{ lastDetectedKeyInfo.title }}</span>
@@ -1539,20 +1539,22 @@ export default {
     },
     filteredShortcuts() {
       const query = (this.shortcutSearchQuery || '').trim().toLowerCase();
-      const category = this.activeShortcutCategory;
+      const category = this.activeShortcutCategory || 'all';
+      const list = Array.isArray(this.shortcutsList) ? this.shortcutsList : [];
 
-      return this.shortcutsList.filter(sc => {
+      return list.filter(sc => {
+        if (!sc) return false;
         const matchesCategory = category === 'all' || sc.category === category;
         if (!matchesCategory) return false;
 
         if (!query) return true;
 
         return (
-          sc.key.toLowerCase().includes(query) ||
-          sc.title.toLowerCase().includes(query) ||
-          sc.description.toLowerCase().includes(query) ||
-          sc.tag.toLowerCase().includes(query) ||
-          sc.context.toLowerCase().includes(query)
+          (sc.key && sc.key.toLowerCase().includes(query)) ||
+          (sc.title && sc.title.toLowerCase().includes(query)) ||
+          (sc.description && sc.description.toLowerCase().includes(query)) ||
+          (sc.tag && sc.tag.toLowerCase().includes(query)) ||
+          (sc.context && sc.context.toLowerCase().includes(query))
         );
       });
     },
@@ -1594,13 +1596,20 @@ export default {
   },
   methods: {
     // POS Shortcuts Cheatsheet & Interactive Testing Controller
-    openShortcutsModal() {
+    openShortcutsModal(e) {
+      if (e && typeof e.stopPropagation === 'function') {
+        e.stopPropagation();
+      }
       this.showShortcutsModal = true;
       this.lastDetectedKeyInfo = { key: '', title: '', desc: '' };
       this.activeHighlightedShortcutId = null;
       this.$nextTick(() => {
-        if (this.$refs.shortcutSearchRef) {
-          this.$refs.shortcutSearchRef.focus();
+        try {
+          if (this.$refs.shortcutSearchRef && typeof this.$refs.shortcutSearchRef.focus === 'function') {
+            this.$refs.shortcutSearchRef.focus();
+          }
+        } catch (err) {
+          // ignore focus error
         }
       });
     },
@@ -5208,7 +5217,38 @@ export default {
 }
 
 /* ==================== INTERACTIVE SHORTCUTS MODAL ==================== */
+/* Fade modal transition */
+.fade-modal-enter-active,
+.fade-modal-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-modal-enter-from,
+.fade-modal-leave-to {
+  opacity: 0;
+}
+
+/* Dedicated shortcuts overlay with maximum z-index */
+.shortcuts-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(6px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  padding: 16px !important;
+  pointer-events: auto !important;
+}
+
 .shortcuts-dialog {
+  pointer-events: auto !important;
   background: #ffffff;
   border-radius: 20px;
   width: 900px;
