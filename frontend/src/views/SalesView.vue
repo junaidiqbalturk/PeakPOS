@@ -9,13 +9,13 @@
             <h1 class="brand-name">Peak<span>POS</span></h1>
             <span class="register-pill">
               <span class="pulse-dot"></span>
-              {{ posMode === 'counter' ? 'High-Speed POS Counter' : 'Touch POS Terminal' }}
+              {{ isCashier ? 'POS Terminal Counter' : (posMode === 'counter' ? 'High-Speed POS Counter' : 'Touch POS Terminal') }}
             </span>
           </div>
         </div>
 
-        <!-- Mode Toggle: Visual vs High-Speed Counter -->
-        <div class="mode-selector">
+        <!-- Mode Toggle: Visual vs High-Speed Counter (Admin & Manager Only) -->
+        <div class="mode-selector" v-if="canAccessAdmin">
           <button
             class="mode-btn"
             :class="{ active: posMode === 'counter' }"
@@ -54,6 +54,17 @@
       </div>
 
       <div class="header-right">
+        <!-- Fullscreen Terminal Toggle [F11] -->
+        <button
+          type="button"
+          class="fullscreen-toggle-btn"
+          @click="toggleFullScreen"
+          :title="isFullScreen ? 'Exit Full Screen [F11]' : 'Enter Full Screen [F11]'"
+        >
+          <i class="material-icons">{{ isFullScreen ? 'fullscreen_exit' : 'fullscreen' }}</i>
+          <span class="fs-text">{{ isFullScreen ? 'Exit Full' : 'Full Screen' }}</span>
+        </button>
+
         <!-- Quick Action Shortcuts -->
         <div class="shortcuts-legend">
           <span class="sc-tag" title="Search / Scan Focus"><kbd>F1</kbd> Scan</span>
@@ -1204,6 +1215,7 @@ export default {
       currentTime: '',
       currentDate: '',
       clockInterval: null,
+      isFullScreen: false,
 
       // Toast State
       toast: {
@@ -1220,6 +1232,10 @@ export default {
     canAccessAdmin() {
       const role = (localStorage.getItem('role') || this.cashierRole || '').toLowerCase();
       return ['super_admin', 'admin', 'manager'].includes(role);
+    },
+    isCashier() {
+      const role = (localStorage.getItem('role') || this.cashierRole || '').toLowerCase();
+      return role === 'cashier';
     },
     heldBillsCount() {
       return Array.isArray(this.heldBills) ? this.heldBills.length : 0;
@@ -2034,8 +2050,13 @@ export default {
         e.preventDefault();
         this.clearCart();
       } else if (e.key === 'F9') {
+        if (!this.isCashier) {
+          e.preventDefault();
+          this.togglePosMode();
+        }
+      } else if (e.key === 'F11') {
         e.preventDefault();
-        this.togglePosMode();
+        this.toggleFullScreen();
       } else if (e.key === 'F12') {
         e.preventDefault();
         if (this.cart.length > 0 && !this.processingOrder) {
@@ -2098,9 +2119,42 @@ export default {
           this.toast.show = false;
         }, 3200)
       };
+    },
+    toggleFullScreen() {
+      const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+      if (!isFs) {
+        const el = document.documentElement;
+        if (el.requestFullscreen) {
+          el.requestFullscreen().catch(err => console.warn('Fullscreen err:', err));
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+        } else if (el.mozRequestFullScreen) {
+          el.mozRequestFullScreen();
+        } else if (el.msRequestFullscreen) {
+          el.msRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(err => console.warn('Exit fullscreen err:', err));
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+      }
+    },
+    handleFullscreenChange() {
+      this.isFullScreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
     }
   },
   created() {
+    // If logged in as Cashier, strictly lock into counter mode
+    const role = (localStorage.getItem('role') || this.cashierRole || '').toLowerCase();
+    if (role === 'cashier') {
+      this.posMode = 'counter';
+    }
     this.$watch('viewMode', newMode => {
       localStorage.setItem('salesViewMode', newMode);
     });
@@ -2113,10 +2167,18 @@ export default {
   },
   mounted() {
     window.addEventListener('keydown', this.handleGlobalKeydown);
+    document.addEventListener('fullscreenchange', this.handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', this.handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', this.handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', this.handleFullscreenChange);
   },
   beforeUnmount() {
     if (this.clockInterval) clearInterval(this.clockInterval);
     window.removeEventListener('keydown', this.handleGlobalKeydown);
+    document.removeEventListener('fullscreenchange', this.handleFullscreenChange);
+    document.removeEventListener('webkitfullscreenchange', this.handleFullscreenChange);
+    document.removeEventListener('mozfullscreenchange', this.handleFullscreenChange);
+    document.removeEventListener('MSFullscreenChange', this.handleFullscreenChange);
   }
 };
 </script>
@@ -2259,7 +2321,37 @@ export default {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+}
+
+/* Fullscreen Toggle Button */
+.fullscreen-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.fullscreen-toggle-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.fullscreen-toggle-btn i {
+  font-size: 1.15rem;
+  color: #4f46e5;
 }
 
 /* Shortcuts Legend */
