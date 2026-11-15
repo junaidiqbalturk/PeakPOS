@@ -3570,59 +3570,6 @@ export default {
   padding: 0 38px 0 42px;
   font-size: 0.88rem;
   color: #0f172a;
-
-/* --------------------------------------------------------------------------
-   MODE 2: TOUCH / VISUAL CATALOG MODE STYLING
-   -------------------------------------------------------------------------- */
-.pos-main {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-}
-
-.catalog-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: #f8fafc;
-  padding: 16px 20px 20px 24px;
-}
-
-.catalog-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.search-box {
-  flex: 1;
-  max-width: 520px;
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-ico {
-  position: absolute;
-  left: 14px;
-  color: #94a3b8;
-  font-size: 1.25rem;
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  height: 42px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 0 38px 0 42px;
-  font-size: 0.88rem;
-  color: #0f172a;
   outline: none;
 }
 
