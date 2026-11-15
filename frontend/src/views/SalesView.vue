@@ -4,7 +4,7 @@
     <header class="pos-header">
       <div class="header-left">
         <div class="brand-container">
-          <img src="../assets/logo-pp.png" alt="PeakPOS Logo" class="brand-logo" />
+          <img src="../assets/peakpos-logo.png" alt="PeakPOS Official Logo" class="brand-logo" />
           <div class="brand-meta">
             <h1 class="brand-name">Peak<span>POS</span></h1>
             <span class="register-pill">
@@ -2769,6 +2769,13 @@ export default {
   width: auto;
   max-width: 44px;
   object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.2));
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.brand-container:hover .brand-logo {
+  transform: translateY(-2px) scale(1.08);
+  filter: drop-shadow(0 6px 14px rgba(124, 58, 237, 0.4));
 }
 
 .brand-meta {

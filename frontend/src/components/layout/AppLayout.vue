@@ -13,7 +13,7 @@
       <div class="sidebar-header">
         <router-link to="/dashboard" class="brand-link">
           <div class="brand-logo-wrap">
-            <img src="../../assets/logo-pp.png" alt="PeakPOS" class="brand-logo-img" />
+            <img src="../../assets/peakpos-logo.png" alt="PeakPOS Official Logo" class="brand-logo-img" />
           </div>
           <div class="brand-text" v-if="!isSidebarCollapsed">
             <h1 class="brand-title">Peak<span>POS</span></h1>
@@ -164,7 +164,7 @@
 
           <!-- Mini Brand Logo when sidebar is collapsed completely -->
           <router-link to="/dashboard" class="header-brand-mini" v-if="isSidebarCollapsed">
-            <img src="../../assets/logo-pp.png" alt="PeakPOS" class="header-brand-logo" />
+            <img src="../../assets/peakpos-logo.png" alt="PeakPOS Official Logo" class="header-brand-logo" />
             <span class="header-brand-name">Peak<span>POS</span></span>
           </router-link>
 
@@ -535,18 +535,31 @@ export default {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+  background: #ffffff;
+  border: 1px solid rgba(99, 102, 241, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 10px rgba(67, 56, 202, 0.25);
+  box-shadow: 0 4px 12px rgba(67, 56, 202, 0.15);
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.brand-link:hover .brand-logo-wrap {
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.35);
+  border-color: rgba(124, 58, 237, 0.4);
 }
 
 .brand-logo-img {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.brand-link:hover .brand-logo-img {
+  transform: rotate(2deg) scale(1.08);
 }
 
 .brand-text {
@@ -1026,9 +1039,14 @@ export default {
 }
 
 .header-brand-logo {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.header-brand-mini:hover .header-brand-logo {
+  transform: translateY(-2px) scale(1.1);
 }
 
 .header-brand-name {
