@@ -9,7 +9,7 @@
             <h1 class="brand-name">Peak<span>POS</span></h1>
             <span class="register-pill">
               <span class="pulse-dot"></span>
-              {{ posMode === 'counter' ? 'Pharmalytics High-Speed Terminal' : 'Retail Touch Terminal' }}
+              {{ posMode === 'counter' ? 'High-Speed POS Counter' : 'Touch POS Terminal' }}
             </span>
           </div>
         </div>
@@ -29,7 +29,7 @@
             class="mode-btn"
             :class="{ active: posMode === 'counter' }"
             @click="setPosMode('counter')"
-            title="Pharmalytics High-Speed Counter Mode (Dense Data Table & Quick Barcode)"
+            title="High-Speed Counter Mode (Dense Data Table & Quick Barcode)"
           >
             <i class="material-icons">flash_on</i>
             <span>High-Speed Counter [F9]</span>
@@ -148,7 +148,7 @@
 
     <!-- MAIN BODY: Conditional Layout Based On POS Mode -->
 
-    <!-- ==================== MODE 1: PHARMALYTICS HIGH-SPEED COUNTER MODE ==================== -->
+    <!-- ==================== MODE 1: HIGH-SPEED COUNTER MODE ==================== -->
     <main v-if="posMode === 'counter'" class="counter-main">
       <!-- Rapid Search & Barcode Scan Input Bar -->
       <div class="counter-scanner-bar">
@@ -293,7 +293,7 @@
         </table>
       </div>
 
-      <!-- Pharmalytics Bottom Billing Cockpit -->
+      <!-- Bottom Billing Cockpit -->
       <footer class="counter-footer">
         <div class="footer-left-meta">
           <div class="meta-stat-pill">
@@ -679,7 +679,7 @@
       <div class="mobile-backdrop" v-if="isMobileCartVisible" @click="toggleMobileCart"></div>
     </div>
 
-    <!-- ==================== PHARMALYTICS PAYMENT & CASH CALCULATOR MODAL ==================== -->
+    <!-- ==================== PAYMENT & CASH CALCULATOR MODAL ==================== -->
     <transition name="fade-modal">
       <div class="modal-overlay" v-if="paymentModal.show" @click="closePaymentModal">
         <div class="payment-dialog" @click.stop>
@@ -783,7 +783,7 @@
                   <span class="hero-amt">${{ calculateTotal().toFixed(2) }}</span>
                 </div>
 
-                <!-- Giant Pharmalytics Change Due Box -->
+                <!-- Change Due Box -->
                 <div class="change-due-box" v-if="paymentModal.method === 'cash'">
                   <span class="change-lbl">Change to Return</span>
                   <span class="change-amt" :class="{ 'change-positive': paymentModal.change >= 0, 'change-insufficient': paymentModal.change < 0 }">
@@ -988,7 +988,7 @@ export default {
   name: 'SalesView',
   data() {
     return {
-      // POS Display Mode: 'counter' (Pharmalytics style) vs 'visual' (touch cards)
+      // POS Display Mode: 'counter' (high-speed data grid) vs 'visual' (touch cards)
       posMode: localStorage.getItem('posMode') || 'counter',
 
       // Products & Categories Data
@@ -1015,11 +1015,11 @@ export default {
         doctor: ''
       },
 
-      // Held / Parked Bills Register (Pharmalytics Feature)
+      // Held / Parked Bills Register
       heldBills: [],
       heldBillsModal: false,
 
-      // Payment Tender & Change Calculator (Pharmalytics Feature)
+      // Payment Tender & Change Calculator
       paymentModal: {
         show: false,
         method: 'cash',
@@ -1407,7 +1407,7 @@ export default {
       return Math.max(0, total);
     },
 
-    // ==================== PHARMALYTICS BILL PARKING / HOLDING SYSTEM ====================
+    // ==================== BILL PARKING / HOLDING SYSTEM ====================
     parkCurrentBill() {
       if (this.cart.length === 0) return;
 
@@ -1813,7 +1813,7 @@ export default {
 
 <style scoped>
 /* ==========================================================================
-   PeakPOS & Pharmalytics High-Speed Hybrid POS Layout
+   PeakPOS High-Speed Hybrid POS Layout
    ========================================================================== */
 
 .pos-layout {
@@ -2169,7 +2169,7 @@ export default {
 }
 
 /* --------------------------------------------------------------------------
-   MODE 1: PHARMALYTICS HIGH-SPEED COUNTER MODE STYLING
+   MODE 1: HIGH-SPEED COUNTER MODE STYLING
    -------------------------------------------------------------------------- */
 .counter-main {
   display: flex;
@@ -2455,7 +2455,7 @@ export default {
 .table-empty-box h3 { font-size: 1.15rem; font-weight: 800; color: #334155; margin: 0 0 4px 0; }
 .table-empty-box p { font-size: 0.85rem; margin: 0; }
 
-/* Pharmalytics Bottom Cockpit */
+/* Bottom Billing Cockpit */
 .counter-footer {
   height: 78px;
   background: #ffffff;
@@ -3016,7 +3016,7 @@ export default {
 .btn-checkout-primary:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
 
 /* --------------------------------------------------------------------------
-   PHARMALYTICS PAYMENT & CASH CALCULATOR MODAL STYLING
+   PAYMENT & CASH CALCULATOR MODAL STYLING
    -------------------------------------------------------------------------- */
 .payment-dialog {
   background: #ffffff;
