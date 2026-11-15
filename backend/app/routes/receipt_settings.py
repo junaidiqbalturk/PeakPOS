@@ -6,6 +6,8 @@ import os
 from app import db
 import logging
 from app.models.receipt_settings import ReceiptSettings
+from app.utils.rbac import roles_required
+from flask_jwt_extended import jwt_required
 
 receipt_settings_bp = Blueprint('receipt_settings_bp', __name__)
 
@@ -29,6 +31,8 @@ def get_settings():
     }), 200
 
 @receipt_settings_bp.route('/receipt-settings', methods=['POST'])
+@jwt_required()
+@roles_required("super_admin", "admin")
 def update_settings():
     data = request.json or {}
     settings = db.session.query(ReceiptSettings).first()
@@ -45,6 +49,8 @@ def update_settings():
     return jsonify({'message': 'Settings updated successfully'}), 200
 
 @receipt_settings_bp.route('/receipt-settings/logo', methods=['POST'])
+@jwt_required()
+@roles_required("super_admin", "admin")
 def upload_logo():
     # Support both 'file' and 'logo' field names for robustness
     file = request.files.get('file') or request.files.get('logo')

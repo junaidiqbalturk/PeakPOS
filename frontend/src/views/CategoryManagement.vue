@@ -753,6 +753,11 @@ export default {
   },
 
   created() {
+    const role = (localStorage.getItem("role") || "").toLowerCase();
+    if (role === "cashier") {
+      this.$router.replace("/sales");
+      return;
+    }
     document.addEventListener('click', this.handleClickOutside);
     window.addEventListener('resize', this.handleResize);
 

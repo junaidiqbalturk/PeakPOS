@@ -452,6 +452,13 @@ export default {
     }
   },
 
+  created() {
+    const role = (localStorage.getItem("role") || "").toLowerCase();
+    if (role === "cashier") {
+      this.$router.replace("/sales");
+    }
+  },
+
   mounted() {
     // Initialize charts and load data
     this.fetchCurrentUser();

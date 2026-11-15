@@ -289,6 +289,12 @@ export default {
       return this.salesSummary.total_revenue / this.salesSummary.total_orders;
     }
   },
+  created() {
+    const role = (localStorage.getItem("role") || "").toLowerCase();
+    if (role === "cashier") {
+      this.$router.replace("/sales");
+    }
+  },
   mounted() {
     this.selectPreset('7days');
   },

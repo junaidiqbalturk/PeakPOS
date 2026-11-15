@@ -36,8 +36,8 @@
           </button>
         </div>
 
-        <!-- Navigation Links -->
-        <nav class="header-nav">
+        <!-- Navigation Links (Admin & Manager Only) -->
+        <nav class="header-nav" v-if="canAccessAdmin">
           <router-link to="/dashboard" class="nav-pill" title="Dashboard">
             <i class="material-icons">dashboard</i>
             <span>Dashboard</span>
@@ -1217,6 +1217,10 @@ export default {
     };
   },
   computed: {
+    canAccessAdmin() {
+      const role = (localStorage.getItem('role') || this.cashierRole || '').toLowerCase();
+      return ['super_admin', 'admin', 'manager'].includes(role);
+    },
     heldBillsCount() {
       return Array.isArray(this.heldBills) ? this.heldBills.length : 0;
     },

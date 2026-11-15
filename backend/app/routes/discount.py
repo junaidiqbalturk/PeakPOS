@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from app import db
 from app.models.discount import Discount
 from flask_jwt_extended import jwt_required
+from app.utils.rbac import roles_required
 
 discount_bp = Blueprint("discount", __name__)
 
@@ -9,6 +10,7 @@ discount_bp = Blueprint("discount", __name__)
 # Create Discount
 @discount_bp.route("/discounts", methods=["POST"])
 @jwt_required()
+@roles_required("super_admin", "admin", "manager")
 def add_discount():
     data = request.get_json()
 
@@ -50,6 +52,7 @@ def get_discount(discount_id):
 # Update Discount
 @discount_bp.route("/discounts/<int:discount_id>", methods=["PUT"])
 @jwt_required()
+@roles_required("super_admin", "admin", "manager")
 def update_discount(discount_id):
     discount = Discount.query.get(discount_id)
     if not discount:
@@ -73,6 +76,7 @@ def update_discount(discount_id):
 # Delete Discount
 @discount_bp.route("/discounts/<int:discount_id>", methods=["DELETE"])
 @jwt_required()
+@roles_required("super_admin", "admin", "manager")
 def delete_discount(discount_id):
     discount = Discount.query.get(discount_id)
     if not discount:

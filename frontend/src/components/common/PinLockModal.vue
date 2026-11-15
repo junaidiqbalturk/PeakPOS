@@ -103,9 +103,9 @@
 import escpos from '@/services/escpos';
 
 const DEFAULT_CASHIERS = [
-  { id: 1, name: 'Admin Manager', role: 'Admin', pin: '1234', email: 'admin@peakpos.com' },
+  { id: 1, name: 'Main Cashier', role: 'Cashier', pin: '1234', email: 'cashier@peakpos.com' },
   { id: 2, name: 'Sarah Cashier', role: 'Cashier', pin: '2580', email: 'sarah@peakpos.com' },
-  { id: 3, name: 'David Counter', role: 'Cashier', pin: '0000', email: 'david@peakpos.com' }
+  { id: 3, name: 'Store Manager', role: 'Manager', pin: '9999', email: 'manager@peakpos.com' }
 ];
 
 export default {

@@ -430,6 +430,12 @@ export default {
       return this.mockSubtotal + this.mockTax;
     }
   },
+  created() {
+    const role = (localStorage.getItem("role") || "").toLowerCase();
+    if (role === "cashier" || role === "manager") {
+      this.$router.replace("/sales");
+    }
+  },
   mounted() {
     this.fetchReceiptSettings();
   },

@@ -645,6 +645,13 @@ export default {
     }
   },
 
+  created() {
+    const role = (localStorage.getItem("role") || "").toLowerCase();
+    if (role === "cashier") {
+      this.$router.replace("/sales");
+    }
+  },
+
   mounted() {
     this.fetchProducts();
     this.fetchCategories();

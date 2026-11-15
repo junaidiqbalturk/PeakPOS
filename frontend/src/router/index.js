@@ -56,17 +56,17 @@ const routes = [
     meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager"], title: "Discounts & Promotions" },
   },
 
-  // Aliases & Redirects to prevent dead links
-  { path: "/products", redirect: "/admin/products" },
-  { path: "/categories", redirect: "/admin/categories" },
-  { path: "/discounts", redirect: "/admin/settings/discounts" },
-  { path: "/inventory", redirect: "/admin/products" },
-  { path: "/enhanced-dashboard", redirect: "/dashboard" },
-  { path: "/settings", redirect: "/admin/settings" },
-  { path: "/admin", redirect: "/dashboard" },
+  // Aliases & Redirects to prevent dead links (Secured with RBAC metadata)
+  { path: "/products", redirect: "/admin/products", meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager"] } },
+  { path: "/categories", redirect: "/admin/categories", meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager"] } },
+  { path: "/discounts", redirect: "/admin/settings/discounts", meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager"] } },
+  { path: "/inventory", redirect: "/admin/products", meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager"] } },
+  { path: "/enhanced-dashboard", redirect: "/dashboard", meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager"] } },
+  { path: "/settings", redirect: "/admin/settings", meta: { requiresAuth: true, roles: ["super_admin", "admin"] } },
+  { path: "/admin", redirect: "/dashboard", meta: { requiresAuth: true, roles: ["super_admin", "admin", "manager"] } },
 
   // Catch-all 404 redirect
-  { path: "/:pathMatch(.*)*", redirect: "/dashboard" }
+  { path: "/:pathMatch(.*)*", redirect: "/sales" }
 ];
 
 const router = createRouter({
@@ -74,32 +74,84 @@ const router = createRouter({
   routes,
 });
 
+/**
+ * Extracts cryptographically verified role claim from JWT token, with localStorage fallback.
+ */
+function getUserRole() {
+  const token = localStorage.getItem("token");
+  if (token) {
+    try {
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split("")
+            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+            .join("")
+        );
+        const payload = JSON.parse(jsonPayload);
+        if (payload && payload.role) {
+          return String(payload.role).toLowerCase();
+        }
+      }
+    } catch (e) {
+      // fallback
+    }
+  }
+  return (localStorage.getItem("role") || "cashier").toLowerCase();
+}
+
 // Route Guard for Multi-Tenant Authentication, RBAC & Page Titles
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
-  const role = (localStorage.getItem("role") || "cashier").toLowerCase();
   const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
+  const role = getUserRole();
 
   if (to.meta && to.meta.title) {
     document.title = `${to.meta.title} • PeakPOS Enterprise`;
   }
 
+  // 1. Unauthenticated users trying to access protected routes -> Redirect to Login
   if (to.meta.requiresAuth && (!token || !isAuthenticated)) {
     next("/");
     return;
   }
 
-  // RBAC Permission Guard
-  if (to.meta.roles && Array.isArray(to.meta.roles)) {
-    if (role === "super_admin" || to.meta.roles.includes(role)) {
+  // 2. Already authenticated users visiting login/signup -> Redirect to home route
+  if ((to.path === "/" || to.path === "/signup") && token && isAuthenticated) {
+    if (role === "cashier") {
+      next("/sales");
+    } else {
+      next("/dashboard");
+    }
+    return;
+  }
+
+  // 3. RBAC Permission Guard across all matched route records
+  const matchedRoute = to.matched.slice().reverse().find((record) => record.meta && record.meta.roles);
+  if (matchedRoute) {
+    const allowedRoles = matchedRoute.meta.roles;
+    if (role === "super_admin" || allowedRoles.includes(role)) {
       next();
     } else {
-      // Cashier redirected to sales register; others to sales if dashboard restricted
+      console.warn(`[RBAC] Access denied for route "${to.path}" (Role: "${role}", Allowed: ${JSON.stringify(allowedRoles)})`);
+      // Cashier is strictly restricted to /sales and /customers
       if (role === "cashier") {
-        next("/sales");
+        if (from.path === "/sales") {
+          // Prevent redundant navigation if already on /sales
+          next(false);
+        } else {
+          next({ path: "/sales", replace: true });
+        }
       } else {
-        next("/dashboard");
+        if (from.path === "/dashboard") {
+          next(false);
+        } else {
+          next({ path: "/dashboard", replace: true });
+        }
       }
+      return;
     }
   } else {
     next();

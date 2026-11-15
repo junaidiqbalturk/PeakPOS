@@ -1,12 +1,15 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models.category import Category
-from app.utils.rbac import get_current_tenant_and_role
+from app.utils.rbac import get_current_tenant_and_role, roles_required
+from flask_jwt_extended import jwt_required
 
 category_bp = Blueprint("category", __name__)
 
 
 @category_bp.route("/categories", methods=["POST"])
+@jwt_required()
+@roles_required("super_admin", "admin", "manager")
 def add_category():
     data = request.get_json() or {}
     tenant_id = None
@@ -54,6 +57,8 @@ def get_categories():
 
 
 @category_bp.route("/categories/<int:category_id>", methods=["PUT"])
+@jwt_required()
+@roles_required("super_admin", "admin", "manager")
 def update_category(category_id):
     category = Category.query.get(category_id)
 
@@ -76,6 +81,8 @@ def update_category(category_id):
 
 
 @category_bp.route("/categories/<int:category_id>", methods=["DELETE"])
+@jwt_required()
+@roles_required("super_admin", "admin", "manager")
 def delete_category(category_id):
     category = Category.query.get(category_id)
 

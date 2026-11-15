@@ -44,17 +44,26 @@ def save_product_image(file, product_id):
 # Create Product
 @product_bp.route("/products", methods=["POST"])
 @jwt_required()
+@roles_required("super_admin", "admin", "manager")
 def add_product():
-    data = request.get_json()
-    product = Product(name=data["name"], price=data["price"], stock=data["stock"], category_id=data["category_id"], )
+    data = request.get_json() or {}
+    tenant_id, _ = get_current_tenant_and_role()
+    product = Product(
+        name=data["name"],
+        price=data["price"],
+        stock=data["stock"],
+        category_id=data["category_id"],
+        tenant_id=tenant_id
+    )
     db.session.add(product)
     db.session.commit()
-    return jsonify({"message": "Product added successfully"}), 201
+    return jsonify({"message": "Product added successfully", "product": product.to_dict()}), 201
 
 
 # Add a new route for creating products with image
 @product_bp.route("/products/with-image", methods=["POST"])
 @jwt_required()
+@roles_required("super_admin", "admin", "manager")
 def add_product_with_image():
     """Create a new product with image upload support"""
     # Check if the request is a form with a file
@@ -258,6 +267,8 @@ def upload_product_image(product_id):
 
 # Delete a specific Product using ID
 @product_bp.route("/products/<int:product_id>", methods=["DELETE"])
+@jwt_required()
+@roles_required("super_admin", "admin", "manager")
 def delete_product(product_id):
     product = Product.query.get(product_id)
 
