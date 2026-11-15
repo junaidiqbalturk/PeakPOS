@@ -51,6 +51,8 @@ def create_app():
     from app.routes.refunds import refund_bp
     from app.routes.receipt import receipt_bp
     from app.routes.receipt_settings import receipt_settings_bp
+    from app.routes.tenant import tenant_bp
+    from app.routes.user import user_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(product_bp, url_prefix="/api")
@@ -69,6 +71,8 @@ def create_app():
     app.register_blueprint(refund_bp, url_prefix="/api")
     app.register_blueprint(receipt_bp, url_prefix="/api")
     app.register_blueprint(receipt_settings_bp, url_prefix="/api")
+    app.register_blueprint(tenant_bp, url_prefix="/api")
+    app.register_blueprint(user_bp, url_prefix="/api")
 
     # Serve static product images and receipt logos safely
     @app.route("/static/product_images/<path:filename>")

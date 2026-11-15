@@ -251,7 +251,7 @@
               </div>
               <div class="item-right">
                 <span class="item-stock" :class="getStockClass(p)">{{ p.stock }} in stock</span>
-                <span class="item-price">${{ p.price.toFixed(2) }}</span>
+                <span class="item-price">{{ currencySymbol }}{{ p.price.toFixed(2) }}</span>
                 <button class="btn-dropdown-add" :disabled="p.stock <= 0">Add</button>
               </div>
             </div>
@@ -310,7 +310,7 @@
                 </td>
                 <td class="col-price">
                   <div class="price-input-box">
-                    <span class="curr-sign">$</span>
+                    <span class="curr-sign">{{ currencySymbol }}</span>
                     <input
                       type="number"
                       step="0.01"
@@ -339,7 +339,7 @@
                   </div>
                 </td>
                 <td class="col-line-total">
-                  <span class="item-total-amount">${{ (item.price * item.quantity).toFixed(2) }}</span>
+                  <span class="item-total-amount">{{ currencySymbol }}{{ (item.price * item.quantity).toFixed(2) }}</span>
                 </td>
                 <td class="col-del">
                   <button class="btn-del-row" @click="removeFromCart(idx)" title="Remove item">
@@ -401,7 +401,7 @@
           <div class="slip-breakdown">
             <div class="breakdown-row">
               <span class="row-label">Subtotal</span>
-              <span class="row-value">${{ calculateSubtotal().toFixed(2) }}</span>
+              <span class="row-value">{{ currencySymbol }}{{ calculateSubtotal().toFixed(2) }}</span>
             </div>
 
             <!-- Discount Selector -->
@@ -414,18 +414,18 @@
                 <select v-model="selectedDiscount" class="slip-discount-select">
                   <option :value="null">None (0%)</option>
                   <option v-for="d in discounts" :key="d.id" :value="d.id">
-                    {{ d.name }} ({{ d.discount_type === 'percentage' ? d.value + '%' : '$' + d.value }})
+                    {{ d.name }} ({{ d.discount_type === 'percentage' ? d.value + '%' : currencySymbol + d.value }})
                   </option>
                 </select>
                 <span class="discount-deduct-val" v-if="selectedDiscount">
-                  -${{ calculateDiscountAmount().toFixed(2) }}
+                  -{{ currencySymbol }}{{ calculateDiscountAmount().toFixed(2) }}
                 </span>
               </div>
             </div>
 
             <div class="breakdown-row">
-              <span class="row-label">Estimated Tax (7%)</span>
-              <span class="row-value">${{ calculateTax().toFixed(2) }}</span>
+              <span class="row-label">Estimated Tax ({{ (taxRate || 7) }}%)</span>
+              <span class="row-value">{{ currencySymbol }}{{ calculateTax().toFixed(2) }}</span>
             </div>
 
             <div class="slip-divider"></div>
@@ -437,7 +437,7 @@
                 <span class="items-summary-note">{{ cart.length }} items &bull; {{ cartTotalItems }} units</span>
               </div>
               <div class="hero-total-price">
-                <span class="hero-curr">$</span>
+                <span class="hero-curr">{{ currencySymbol }}</span>
                 <span class="hero-val">{{ calculateTotal().toFixed(2) }}</span>
               </div>
             </div>
@@ -455,32 +455,13 @@
                 Exact Cash
               </button>
               <button
+                v-for="denom in quickCashDenominations"
+                :key="denom"
                 class="btn-cash-preset"
                 :disabled="cart.length === 0"
-                @click="oneClickCashPay(10)"
+                @click="oneClickCashPay(denom)"
               >
-                $10
-              </button>
-              <button
-                class="btn-cash-preset"
-                :disabled="cart.length === 0"
-                @click="oneClickCashPay(20)"
-              >
-                $20
-              </button>
-              <button
-                class="btn-cash-preset"
-                :disabled="cart.length === 0"
-                @click="oneClickCashPay(50)"
-              >
-                $50
-              </button>
-              <button
-                class="btn-cash-preset"
-                :disabled="cart.length === 0"
-                @click="oneClickCashPay(100)"
-              >
-                $100
+                {{ currencySymbol }}{{ denom }}
               </button>
               <button
                 class="btn-cash-preset card-preset"
@@ -503,7 +484,7 @@
                 <i class="material-icons">payments</i>
                 <span>PAY &bull; [F12]</span>
               </div>
-              <span class="pay-btn-amount">${{ calculateTotal().toFixed(2) }}</span>
+              <span class="pay-btn-amount">{{ currencySymbol }}{{ calculateTotal().toFixed(2) }}</span>
             </button>
           </div>
 
@@ -660,7 +641,7 @@
 
                 <div class="card-footer">
                   <div class="price-stack">
-                    <span class="currency-symbol">$</span>
+                    <span class="currency-symbol">{{ currencySymbol }}</span>
                     <span class="price-value">{{ product.price.toFixed(2) }}</span>
                   </div>
 
@@ -711,7 +692,7 @@
                       {{ product.stock }} in stock
                     </span>
                   </td>
-                  <td class="td-price">${{ product.price.toFixed(2) }}</td>
+                  <td class="td-price">{{ currencySymbol }}{{ product.price.toFixed(2) }}</td>
                   <td class="td-action">
                     <button class="btn-table-add" :disabled="product.stock <= 0" @click.stop="addToCart(product)">
                       <i class="material-icons">add_shopping_cart</i>
@@ -768,7 +749,7 @@
                 <div class="cart-item-details">
                   <div class="cart-item-main">
                     <h4 class="cart-item-name" :title="item.name">{{ item.name }}</h4>
-                    <span class="cart-item-unit-price">${{ item.price.toFixed(2) }} ea</span>
+                    <span class="cart-item-unit-price">{{ currencySymbol }}{{ item.price.toFixed(2) }} ea</span>
                   </div>
 
                   <div class="cart-item-subline">
@@ -783,7 +764,7 @@
                     </div>
 
                     <div class="cart-item-total">
-                      ${{ (item.price * item.quantity).toFixed(2) }}
+                      {{ currencySymbol }}{{ (item.price * item.quantity).toFixed(2) }}
                     </div>
 
                     <button class="btn-item-del" @click.stop="removeFromCart(index)" title="Remove item">
@@ -800,7 +781,7 @@
             <div class="summary-breakdown">
               <div class="calc-row">
                 <span class="calc-label">Subtotal</span>
-                <span class="calc-val">${{ calculateSubtotal().toFixed(2) }}</span>
+                <span class="calc-val">{{ currencySymbol }}{{ calculateSubtotal().toFixed(2) }}</span>
               </div>
 
               <div class="calc-row discount-selection-row">
@@ -812,25 +793,25 @@
                   <select v-model="selectedDiscount" class="pos-select-discount">
                     <option :value="null">No Discount</option>
                     <option v-for="d in discounts" :key="d.id" :value="d.id">
-                      {{ d.name }} ({{ d.discount_type === 'percentage' ? d.value + '%' : '$' + d.value }})
+                      {{ d.name }} ({{ d.discount_type === 'percentage' ? d.value + '%' : currencySymbol + d.value }})
                     </option>
                   </select>
                   <span class="discount-deduction" v-if="selectedDiscount">
-                    -${{ calculateDiscountAmount().toFixed(2) }}
+                    -{{ currencySymbol }}{{ calculateDiscountAmount().toFixed(2) }}
                   </span>
                 </div>
               </div>
 
               <div class="calc-row">
                 <span class="calc-label">Tax (7%)</span>
-                <span class="calc-val">${{ calculateTax().toFixed(2) }}</span>
+                <span class="calc-val">{{ currencySymbol }}{{ calculateTax().toFixed(2) }}</span>
               </div>
 
               <div class="calc-divider"></div>
 
               <div class="calc-row grand-total-row">
                 <span class="grand-total-label">Total Due</span>
-                <span class="grand-total-val">${{ calculateTotal().toFixed(2) }}</span>
+                <span class="grand-total-val">{{ currencySymbol }}{{ calculateTotal().toFixed(2) }}</span>
               </div>
             </div>
 
@@ -841,7 +822,7 @@
               @click="openPaymentModal"
             >
               <i class="material-icons">payments</i>
-              <span>Charge ${{ calculateTotal().toFixed(2) }} &bull; [F12]</span>
+              <span>Charge {{ currencySymbol }}{{ calculateTotal().toFixed(2) }} &bull; [F12]</span>
             </button>
           </div>
         </div>
@@ -906,7 +887,7 @@
               <div class="cash-calc-container" v-if="paymentModal.method === 'cash'">
                 <label class="pay-section-label">Cash Received From Customer</label>
                 <div class="tendered-input-wrapper">
-                  <span class="tendered-curr">$</span>
+                  <span class="tendered-curr">{{ currencySymbol }}</span>
                   <input
                     ref="tenderedInput"
                     type="number"
@@ -922,10 +903,14 @@
                 <!-- Fast Denomination Presets -->
                 <div class="denom-presets">
                   <button class="denom-btn" @click="setExactTendered">Exact Amount</button>
-                  <button class="denom-btn" @click="addTendered(10)">+$10</button>
-                  <button class="denom-btn" @click="addTendered(20)">+$20</button>
-                  <button class="denom-btn" @click="addTendered(50)">+$50</button>
-                  <button class="denom-btn" @click="addTendered(100)">+$100</button>
+                  <button
+                    v-for="denom in quickCashDenominations"
+                    :key="denom"
+                    class="denom-btn"
+                    @click="addTendered(denom)"
+                  >
+                    +{{ currencySymbol }}{{ denom }}
+                  </button>
                 </div>
               </div>
 
@@ -940,30 +925,30 @@
               <div class="bill-summary-ticket">
                 <div class="ticket-row-sm">
                   <span>Subtotal</span>
-                  <span>${{ calculateSubtotal().toFixed(2) }}</span>
+                  <span>{{ currencySymbol }}{{ calculateSubtotal().toFixed(2) }}</span>
                 </div>
                 <div class="ticket-row-sm" v-if="selectedDiscount">
                   <span>Discount</span>
-                  <span class="disc-text">-${{ calculateDiscountAmount().toFixed(2) }}</span>
+                  <span class="disc-text">-{{ currencySymbol }}{{ calculateDiscountAmount().toFixed(2) }}</span>
                 </div>
                 <div class="ticket-row-sm">
                   <span>Tax (7%)</span>
-                  <span>${{ calculateTax().toFixed(2) }}</span>
+                  <span>{{ currencySymbol }}{{ calculateTax().toFixed(2) }}</span>
                 </div>
 
                 <div class="ticket-hero-total">
                   <span class="hero-lbl">Net Amount Due</span>
-                  <span class="hero-amt">${{ calculateTotal().toFixed(2) }}</span>
+                  <span class="hero-amt">{{ currencySymbol }}{{ calculateTotal().toFixed(2) }}</span>
                 </div>
 
                 <!-- Change Due Box -->
                 <div class="change-due-box" v-if="paymentModal.method === 'cash'">
                   <span class="change-lbl">Change to Return</span>
                   <span class="change-amt" :class="{ 'change-positive': paymentModal.change >= 0, 'change-insufficient': paymentModal.change < 0 }">
-                    ${{ Math.max(0, paymentModal.change).toFixed(2) }}
+                    {{ currencySymbol }}{{ Math.max(0, paymentModal.change).toFixed(2) }}
                   </span>
                   <span class="underpaid-warning" v-if="paymentModal.change < 0">
-                    Remaining to collect: ${{ Math.abs(paymentModal.change).toFixed(2) }}
+                    Remaining to collect: {{ currencySymbol }}{{ Math.abs(paymentModal.change).toFixed(2) }}
                   </span>
                 </div>
               </div>
@@ -1010,7 +995,7 @@
                     <span class="held-badge">Bill #{{ index + 1 }}</span>
                     <span class="held-time">{{ bill.timestamp }}</span>
                   </div>
-                  <span class="held-total">${{ bill.total.toFixed(2) }}</span>
+                  <span class="held-total">{{ currencySymbol }}{{ bill.total.toFixed(2) }}</span>
                 </div>
 
                 <div class="held-card-customer">
@@ -1059,7 +1044,7 @@
             <div class="modal-info-col">
               <span class="modal-category">{{ getCategoryName(quickViewProduct.category_id) }}</span>
               <h2 class="modal-title">{{ quickViewProduct.name }}</h2>
-              <p class="modal-price">${{ quickViewProduct.price.toFixed(2) }}</p>
+              <p class="modal-price">{{ currencySymbol }}{{ quickViewProduct.price.toFixed(2) }}</p>
 
               <div class="modal-desc" v-if="quickViewProduct.description">{{ quickViewProduct.description }}</div>
 
@@ -1108,22 +1093,22 @@
             <div class="ticket-items">
               <div v-for="item in orderSummary.items" :key="item.id" class="ticket-row">
                 <span class="ticket-item-title">{{ item.name }} &times; {{ item.quantity }}</span>
-                <span class="ticket-item-price">${{ (item.price * item.quantity).toFixed(2) }}</span>
+                <span class="ticket-item-price">{{ currencySymbol }}{{ (item.price * item.quantity).toFixed(2) }}</span>
               </div>
             </div>
 
             <div class="ticket-totals">
-              <div class="ticket-calc-row"><span>Subtotal:</span><span>${{ orderSummary.subtotal.toFixed(2) }}</span></div>
-              <div class="ticket-calc-row"><span>Tax (7%):</span><span>${{ orderSummary.tax.toFixed(2) }}</span></div>
+              <div class="ticket-calc-row"><span>Subtotal:</span><span>{{ currencySymbol }}{{ orderSummary.subtotal.toFixed(2) }}</span></div>
+              <div class="ticket-calc-row"><span>Tax (7%):</span><span>{{ currencySymbol }}{{ orderSummary.tax.toFixed(2) }}</span></div>
               <div class="ticket-calc-row" v-if="orderSummary.discount > 0">
-                <span>Discount:</span><span>-${{ orderSummary.discount.toFixed(2) }}</span>
+                <span>Discount:</span><span>-{{ currencySymbol }}{{ orderSummary.discount.toFixed(2) }}</span>
               </div>
-              <div class="ticket-calc-row ticket-grand-total"><span>Total Paid:</span><span>${{ orderSummary.total.toFixed(2) }}</span></div>
+              <div class="ticket-calc-row ticket-grand-total"><span>Total Paid:</span><span>{{ currencySymbol }}{{ orderSummary.total.toFixed(2) }}</span></div>
               <div class="ticket-calc-row" v-if="paymentModal.method === 'cash'">
-                <span>Cash Tendered:</span><span>${{ paymentModal.tendered.toFixed(2) }}</span>
+                <span>Cash Tendered:</span><span>{{ currencySymbol }}{{ paymentModal.tendered.toFixed(2) }}</span>
               </div>
               <div class="ticket-calc-row" v-if="paymentModal.method === 'cash'">
-                <span>Change Returned:</span><span>${{ Math.max(0, paymentModal.change).toFixed(2) }}</span>
+                <span>Change Returned:</span><span>{{ currencySymbol }}{{ Math.max(0, paymentModal.change).toFixed(2) }}</span>
               </div>
             </div>
           </div>
@@ -1461,7 +1446,7 @@ export default {
           key: 'F12',
           title: 'Open Payment / Finalize Sale',
           category: 'checkout',
-          description: 'Launches the Tender & Payment modal with Quick Cash notes ($10, $20, $50, $100, Exact) and Card options. Also starts New Sale on receipt.',
+          description: 'Launches the Tender & Payment modal with adaptive Quick Cash notes, Exact amount, and Card options. Also starts New Sale on receipt.',
           context: 'Cart with items',
           tag: 'Checkout'
         },
@@ -1503,6 +1488,10 @@ export default {
         }
       ],
 
+      // Store Currency State
+      currencySymbol: localStorage.getItem('currency_symbol') || 'Rs.',
+      currencyCode: localStorage.getItem('currency_code') || 'PKR',
+
       // Cashier and Time state
       cashierName: localStorage.getItem('username') || 'Cashier',
       cashierRole: localStorage.getItem('role') || 'Staff',
@@ -1536,6 +1525,15 @@ export default {
     },
     cartTotalItems() {
       return this.cart.reduce((sum, item) => sum + item.quantity, 0);
+    },
+    quickCashDenominations() {
+      const code = (this.currencyCode || 'PKR').toUpperCase();
+      if (code === 'PKR') {
+        return [100, 500, 1000, 5000];
+      } else if (code === 'AED' || code === 'SAR') {
+        return [20, 50, 100, 500];
+      }
+      return [10, 20, 50, 100];
     },
     filteredShortcuts() {
       const query = (this.shortcutSearchQuery || '').trim().toLowerCase();
@@ -2701,6 +2699,12 @@ export default {
   },
   mounted() {
     window.addEventListener('keydown', this.handleGlobalKeydown);
+    window.addEventListener('currency-changed', (e) => {
+      if (e && e.detail) {
+        if (e.detail.symbol) this.currencySymbol = e.detail.symbol;
+        if (e.detail.code) this.currencyCode = e.detail.code;
+      }
+    });
     document.addEventListener('fullscreenchange', this.handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', this.handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', this.handleFullscreenChange);

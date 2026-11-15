@@ -234,11 +234,12 @@ class EscPosDriver {
 
     // Line Items
     const items = receiptData.items || [];
+    const sym = receiptData.currencySymbol || localStorage.getItem('currency_symbol') || 'Rs.';
     items.forEach(item => {
       const name = (item.name || item.product_name || 'Item').substring(0, 18);
       const qty = String(item.quantity || 1).padStart(3, ' ');
-      const price = `$${Number(item.price || item.unit_price || 0).toFixed(2)}`.padStart(7, ' ');
-      const total = `$${(Number(item.quantity || 1) * Number(item.price || 0)).toFixed(2)}`.padStart(8, ' ');
+      const price = `${sym}${Number(item.price || item.unit_price || 0).toFixed(2)}`.padStart(7, ' ');
+      const total = `${sym}${(Number(item.quantity || 1) * Number(item.price || 0)).toFixed(2)}`.padStart(8, ' ');
 
       const paddedName = name.padEnd(18, ' ');
       pushLine(`${paddedName} ${qty} ${price} ${total}`);
@@ -254,19 +255,19 @@ class EscPosDriver {
     const tendered = Number(receiptData.tendered || receiptData.total || 0).toFixed(2);
     const change = Number(receiptData.change || 0).toFixed(2);
 
-    pushLine(`Subtotal: $${subtotal}`);
-    pushLine(`Tax: $${tax}`);
+    pushLine(`Subtotal: ${sym}${subtotal}`);
+    pushLine(`Tax: ${sym}${tax}`);
 
     // Bold Total (ESC E 1)
     pushBytes(0x1B, 0x45, 0x01);
     pushBytes(0x1B, 0x21, 0x20); // Double height
-    pushLine(`TOTAL DUE: $${total}`);
+    pushLine(`TOTAL DUE: ${sym}${total}`);
     pushBytes(0x1B, 0x45, 0x00);
     pushBytes(0x1B, 0x21, 0x00); // Normal text
 
-    pushLine(`Paid (${receiptData.paymentMethod || 'Cash'}): $${tendered}`);
+    pushLine(`Paid (${receiptData.paymentMethod || 'Cash'}): ${sym}${tendered}`);
     if (Number(change) > 0) {
-      pushLine(`Change Due: $${change}`);
+      pushLine(`Change Due: ${sym}${change}`);
     }
 
     pushLine(divider);

@@ -159,10 +159,31 @@ export default {
         localStorage.setItem('peakpos_cashiers', JSON.stringify(DEFAULT_CASHIERS));
       }
 
+      // Fetch latest cashiers from backend
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetch('http://127.0.0.1:5000/api/users', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+          .then(res => (res.ok ? res.json() : null))
+          .then(data => {
+            if (data && Array.isArray(data.users) && data.users.length > 0) {
+              this.cashiersList = data.users.map(u => ({
+                id: u.id,
+                name: u.username,
+                role: u.role,
+                pin: u.pin_code || '1234'
+              }));
+              localStorage.setItem('peakpos_cashiers', JSON.stringify(this.cashiersList));
+            }
+          })
+          .catch(() => {});
+      }
+
       // Check current user
-      const currentName = localStorage.getItem('userName');
+      const currentName = localStorage.getItem('username') || localStorage.getItem('userName');
       if (currentName) {
-        const found = this.cashiersList.find(c => c.name.toLowerCase() === currentName.toLowerCase());
+        const found = this.cashiersList.find(c => c.name && c.name.toLowerCase() === currentName.toLowerCase());
         if (found) {
           this.selectedCashier = found;
         }

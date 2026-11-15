@@ -4,23 +4,56 @@
       <!-- Top Action Toolbar -->
       <div class="settings-toolbar">
         <div class="toolbar-left">
-          <h2>Store Configuration & Thermal Receipt Studio</h2>
-          <p>Customize store identity, tax rates, currency, and design your 80mm/58mm thermal receipts with live preview</p>
+          <h2>{{ activeTab === 'staff' ? 'Staff & Cashier Management' : 'Store Configuration & Thermal Receipt Studio' }}</h2>
+          <p>{{ activeTab === 'staff' ? 'Create cashier accounts, configure 4-digit POS lock PINs, and manage team permissions' : 'Customize store identity, tax rates, currency, and design your 80mm/58mm thermal receipts with live preview' }}</p>
         </div>
         <div class="toolbar-right">
-          <button class="btn-print-test" @click="printTestReceipt">
-            <i class="material-icons">print</i>
-            <span>Test Print Receipt</span>
-          </button>
-          <button class="btn-save-primary" @click="saveReceiptSettings" :disabled="receiptSaving">
-            <i class="material-icons" :class="{ 'spin': receiptSaving }">{{ receiptSaving ? 'sync' : 'save' }}</i>
-            <span>{{ receiptSaving ? 'Saving...' : 'Save Settings' }}</span>
-          </button>
+          <template v-if="activeTab === 'receipts'">
+            <button class="btn-print-test" @click="printTestReceipt">
+              <i class="material-icons">print</i>
+              <span>Test Print Receipt</span>
+            </button>
+            <button class="btn-save-primary" @click="saveAllStoreSettings" :disabled="receiptSaving">
+              <i class="material-icons" :class="{ 'spin': receiptSaving }">{{ receiptSaving ? 'sync' : 'save' }}</i>
+              <span>{{ receiptSaving ? 'Saving...' : 'Save Settings' }}</span>
+            </button>
+          </template>
+          <template v-else>
+            <button class="btn-save-primary" @click="openAddUserModal">
+              <i class="material-icons">person_add</i>
+              <span>Add Cashier / Staff</span>
+            </button>
+          </template>
         </div>
       </div>
 
-      <!-- Preserved 3D Metric Cards with Hover Effects and Glow -->
-      <div class="metrics-grid">
+      <!-- Settings Navigation Tabs -->
+      <div class="settings-nav-tabs">
+        <button
+          type="button"
+          class="settings-tab-btn"
+          :class="{ active: activeTab === 'receipts' }"
+          @click="activeTab = 'receipts'"
+        >
+          <i class="material-icons">store</i>
+          <span>Store & Thermal Receipts</span>
+        </button>
+        <button
+          type="button"
+          class="settings-tab-btn"
+          :class="{ active: activeTab === 'staff' }"
+          @click="activeTab = 'staff'"
+        >
+          <i class="material-icons">badge</i>
+          <span>Staff & Cashier Management</span>
+          <span class="tab-badge-count">{{ usersList.length }}</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: STORE & THERMAL RECEIPTS -->
+      <div v-if="activeTab === 'receipts'" class="receipts-tab-content">
+        <!-- Preserved 3D Metric Cards with Hover Effects and Glow -->
+        <div class="metrics-grid">
         <!-- Receipt Active Status -->
         <div class="metric-card sales">
           <div class="metric-card-inner">
@@ -84,9 +117,9 @@
               </div>
             </div>
             <div class="metric-content">
-              <span class="metric-label">Currency Symbol</span>
-              <div class="metric-value">{{ currencySymbol }} (USD)</div>
-              <span class="metric-sub">Standard Tender Code</span>
+              <span class="metric-label">Currency Profile</span>
+              <div class="metric-value">{{ currencySymbol }} ({{ currencyCode }})</div>
+              <span class="metric-sub">{{ currencyCode === 'PKR' ? 'Pakistan Rupee' : 'Store Tender Currency' }}</span>
             </div>
             <div class="metric-card-backdrop"></div>
             <div class="metric-card-glow"></div>
@@ -177,8 +210,61 @@
             </div>
 
             <div class="card-section-title mt-4">
+              <i class="material-icons">payments</i>
+              <h3>3. Store Currency & Financial Localization</h3>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Currency Region Preset</label>
+                <select v-model="currencyPreset" @change="onCurrencyPresetChange" class="form-control">
+                  <option value="PKR">🇵🇰 Pakistan (PKR - Rs.)</option>
+                  <option value="USD">🇺🇸 United States (USD - $)</option>
+                  <option value="AED">🇦🇪 United Arab Emirates (AED - AED)</option>
+                  <option value="GBP">🇬🇧 United Kingdom (GBP - £)</option>
+                  <option value="EUR">🇪🇺 European Union (EUR - €)</option>
+                  <option value="SAR">🇸🇦 Saudi Arabia (SAR - SAR)</option>
+                  <option value="CAD">🇨🇦 Canada (CAD - CA$)</option>
+                  <option value="AUD">🇦🇺 Australia (AUD - A$)</option>
+                  <option value="custom">✏️ Custom Currency / Symbol...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Currency Symbol (Display)</label>
+                <input
+                  type="text"
+                  v-model="currencySymbol"
+                  placeholder="e.g. Rs. or ₨ or $"
+                  class="form-control"
+                />
+              </div>
+            </div>
+
+            <div class="form-grid-2 mt-2">
+              <div class="form-group">
+                <label>Currency Code (ISO)</label>
+                <input
+                  type="text"
+                  v-model="currencyCode"
+                  placeholder="e.g. PKR, USD"
+                  class="form-control"
+                />
+              </div>
+              <div class="form-group">
+                <label>Standard Sales Tax Rate (%)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  v-model.number="taxRate"
+                  class="form-control"
+                />
+              </div>
+            </div>
+
+            <div class="card-section-title mt-4">
               <i class="material-icons">tune</i>
-              <h3>3. Hardware & POS Printing Preferences</h3>
+              <h3>4. Hardware & POS Printing Preferences</h3>
             </div>
 
             <div class="form-grid-2">
@@ -188,16 +274,6 @@
                   <option value="80">80mm Standard (Counter POS)</option>
                   <option value="58">58mm Compact (Mobile / Handheld)</option>
                 </select>
-              </div>
-              <div class="form-group">
-                <label>Sales Tax Rate (%)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  v-model.number="taxRate"
-                  class="form-control"
-                />
               </div>
             </div>
 
@@ -311,8 +387,8 @@
                   <tr v-for="item in mockReceipt.items" :key="item.name">
                     <td class="text-left">{{ item.name }}</td>
                     <td class="text-center">{{ item.qty }}</td>
-                    <td class="text-right">${{ item.price.toFixed(2) }}</td>
-                    <td class="text-right font-bold">${{ (item.qty * item.price).toFixed(2) }}</td>
+                    <td class="text-right">{{ currencySymbol }}{{ item.price.toFixed(2) }}</td>
+                    <td class="text-right font-bold">{{ currencySymbol }}{{ (item.qty * item.price).toFixed(2) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -323,23 +399,23 @@
               <div class="thermal-totals-wrap">
                 <div class="thermal-row">
                   <span>Subtotal:</span>
-                  <span>${{ mockSubtotal.toFixed(2) }}</span>
+                  <span>{{ currencySymbol }}{{ mockSubtotal.toFixed(2) }}</span>
                 </div>
                 <div class="thermal-row">
                   <span>Sales Tax ({{ taxRate }}%):</span>
-                  <span>${{ mockTax.toFixed(2) }}</span>
+                  <span>{{ currencySymbol }}{{ mockTax.toFixed(2) }}</span>
                 </div>
                 <div class="thermal-row thermal-grand-total">
                   <span>TOTAL DUE:</span>
-                  <strong>${{ mockTotal.toFixed(2) }}</strong>
+                  <strong>{{ currencySymbol }}{{ mockTotal.toFixed(2) }}</strong>
                 </div>
                 <div class="thermal-row">
                   <span>Cash Tendered:</span>
-                  <span>$50.00</span>
+                  <span>{{ currencySymbol }}500.00</span>
                 </div>
                 <div class="thermal-row font-bold">
                   <span>Change Due:</span>
-                  <span>${{ Math.max(0, 50.0 - mockTotal).toFixed(2) }}</span>
+                  <span>{{ currencySymbol }}{{ Math.max(0, 500.0 - mockTotal).toFixed(2) }}</span>
                 </div>
               </div>
 
@@ -367,6 +443,265 @@
           </div>
         </div>
       </div>
+      </div> <!-- End of activeTab === 'receipts' -->
+
+      <!-- TAB 2: STAFF & CASHIER MANAGEMENT STUDIO -->
+      <div v-if="activeTab === 'staff'" class="staff-studio-wrap">
+        <!-- Staff Metrics Grid -->
+        <div class="metrics-grid">
+          <div class="metric-card sales">
+            <div class="metric-card-inner">
+              <div class="metric-icon-container">
+                <div class="metric-icon"><i class="material-icons">people</i></div>
+              </div>
+              <div class="metric-content">
+                <span class="metric-label">Total Team</span>
+                <div class="metric-value">{{ usersList.length }}</div>
+                <span class="metric-sub">Registered Staff Members</span>
+              </div>
+              <div class="metric-card-backdrop"></div>
+              <div class="metric-card-glow"></div>
+            </div>
+          </div>
+
+          <div class="metric-card products">
+            <div class="metric-card-inner">
+              <div class="metric-icon-container">
+                <div class="metric-icon"><i class="material-icons">point_of_sale</i></div>
+              </div>
+              <div class="metric-content">
+                <span class="metric-label">Active Cashiers</span>
+                <div class="metric-value">{{ activeCashiersCount }}</div>
+                <span class="metric-sub">Frontline POS Operators</span>
+              </div>
+              <div class="metric-card-backdrop"></div>
+              <div class="metric-card-glow"></div>
+            </div>
+          </div>
+
+          <div class="metric-card orders">
+            <div class="metric-card-inner">
+              <div class="metric-icon-container">
+                <div class="metric-icon"><i class="material-icons">admin_panel_settings</i></div>
+              </div>
+              <div class="metric-content">
+                <span class="metric-label">Administrators</span>
+                <div class="metric-value">{{ adminsCount }}</div>
+                <span class="metric-sub">Store Managers & Admins</span>
+              </div>
+              <div class="metric-card-backdrop"></div>
+              <div class="metric-card-glow"></div>
+            </div>
+          </div>
+
+          <div class="metric-card items">
+            <div class="metric-card-inner">
+              <div class="metric-icon-container">
+                <div class="metric-icon"><i class="material-icons">dialpad</i></div>
+              </div>
+              <div class="metric-content">
+                <span class="metric-label">Quick PIN Ready</span>
+                <div class="metric-value">{{ pinReadyCount }}</div>
+                <span class="metric-sub">4-Digit Terminal PIN Set</span>
+              </div>
+              <div class="metric-card-backdrop"></div>
+              <div class="metric-card-glow"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Staff Table Card -->
+        <div class="staff-card">
+          <div class="staff-card-header">
+            <div class="staff-header-left">
+              <h3>Store Cashiers & Team Members</h3>
+              <p>Manage frontline cashiers, assign 4-digit quick POS terminal PINs, and control access permissions.</p>
+            </div>
+            <div class="staff-header-actions">
+              <div class="staff-search-input">
+                <i class="material-icons">search</i>
+                <input
+                  type="text"
+                  v-model="userSearchQuery"
+                  placeholder="Filter by name, email, role..."
+                />
+              </div>
+              <button class="btn-add-cashier" @click="openAddUserModal">
+                <i class="material-icons">person_add</i>
+                <span>Add Cashier / Staff</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Staff Table -->
+          <div class="staff-table-wrap">
+            <table class="staff-table">
+              <thead>
+                <tr>
+                  <th>Staff Member</th>
+                  <th>Login Email</th>
+                  <th>Role</th>
+                  <th>Terminal PIN</th>
+                  <th>Status</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="user in filteredUsersList" :key="user.id">
+                  <td>
+                    <div class="user-avatar-cell">
+                      <div class="user-avatar-circle" :class="user.role">
+                        {{ getInitials(user.username) }}
+                      </div>
+                      <div class="user-cell-meta">
+                        <strong>{{ user.username }}</strong>
+                        <small>ID: #{{ user.id }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ user.email }}</td>
+                  <td>
+                    <span class="role-badge" :class="user.role">
+                      <i class="material-icons">{{ getRoleIcon(user.role) }}</i>
+                      <span>{{ user.role.toUpperCase() }}</span>
+                    </span>
+                  </td>
+                  <td>
+                    <span class="pin-badge" :class="{ 'has-pin': user.has_pin }">
+                      <i class="material-icons">{{ user.has_pin ? 'lock' : 'lock_open' }}</i>
+                      <span>{{ user.has_pin ? 'PIN Set (••••)' : 'No PIN' }}</span>
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      class="btn-status-toggle"
+                      :class="{ active: user.is_active }"
+                      @click="toggleUserActive(user)"
+                      title="Toggle active status"
+                    >
+                      <span class="status-dot"></span>
+                      <span>{{ user.is_active ? 'Active' : 'Disabled' }}</span>
+                    </button>
+                  </td>
+                  <td class="text-right">
+                    <button class="btn-action-icon edit" @click="openEditUserModal(user)" title="Edit Staff & PIN">
+                      <i class="material-icons">edit</i>
+                    </button>
+                    <button class="btn-action-icon delete" @click="confirmDeleteUser(user)" title="Delete Staff">
+                      <i class="material-icons">delete_outline</i>
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="filteredUsersList.length === 0">
+                  <td colspan="6" class="text-center py-5 text-muted">
+                    <i class="material-icons empty-icon">group_off</i>
+                    <p>No staff members found matching your search</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add / Edit Cashier Modal -->
+      <transition name="fade-modal">
+        <div class="modal-overlay shortcuts-modal-overlay" v-if="showUserModal" @click.self="showUserModal = false">
+          <div class="user-dialog" @click.stop>
+            <div class="user-modal-header">
+              <div class="user-title-box">
+                <div class="user-header-icon-ring">
+                  <i class="material-icons">{{ editingUserId ? 'manage_accounts' : 'person_add' }}</i>
+                </div>
+                <div>
+                  <h3>{{ editingUserId ? 'Edit Staff Member' : 'Add New Cashier / Staff' }}</h3>
+                  <p>{{ editingUserId ? 'Update cashier details, role, or reset their terminal PIN' : 'Create login credentials and a 4-digit quick lock PIN for this cashier' }}</p>
+                </div>
+              </div>
+              <button class="btn-modal-x" @click="showUserModal = false"><i class="material-icons">close</i></button>
+            </div>
+
+            <form @submit.prevent="saveUser" class="user-modal-body">
+              <div class="form-group">
+                <label>Full Name / Staff Username <span class="req">*</span></label>
+                <input
+                  type="text"
+                  v-model="userForm.username"
+                  required
+                  placeholder="e.g. Ali Khan"
+                  class="form-control"
+                />
+              </div>
+
+              <div class="form-group">
+                <label>Login Email Address <span class="req">*</span></label>
+                <input
+                  type="email"
+                  v-model="userForm.email"
+                  required
+                  placeholder="e.g. ali@peakpos.com"
+                  class="form-control"
+                />
+              </div>
+
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label>
+                    {{ editingUserId ? 'New Password (leave blank to keep current)' : 'Account Password' }}
+                    <span v-if="!editingUserId" class="req">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    v-model="userForm.password"
+                    :required="!editingUserId"
+                    placeholder="Min. 4 characters"
+                    class="form-control"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label>System Role <span class="req">*</span></label>
+                  <select v-model="userForm.role" class="form-control">
+                    <option value="cashier">Cashier (POS Terminal Only)</option>
+                    <option value="manager">Manager (Reports & Inventory)</option>
+                    <option value="admin">Administrator (Full Store Access)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- 4-Digit Terminal PIN Box -->
+              <div class="pin-config-section">
+                <div class="pin-config-header">
+                  <div>
+                    <label class="font-bold">4-Digit Quick Terminal PIN</label>
+                    <p class="text-xs text-muted">Used by the cashier to quickly unlock and switch shifts on the POS terminal screen.</p>
+                  </div>
+                  <div class="pin-preview-pills">
+                    <span v-for="i in 4" :key="i" class="mini-pin-dot" :class="{ filled: userForm.pin_code && userForm.pin_code.length >= i }"></span>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  maxlength="4"
+                  pattern="[0-9]*"
+                  v-model="userForm.pin_code"
+                  placeholder="e.g. 1234"
+                  class="form-control pin-input"
+                />
+              </div>
+
+              <div class="user-modal-footer">
+                <button type="button" class="btn-cancel" @click="showUserModal = false">Cancel</button>
+                <button type="submit" class="btn-save-user" :disabled="userSaving">
+                  <i class="material-icons" :class="{ spin: userSaving }">{{ userSaving ? 'sync' : 'check' }}</i>
+                  <span>{{ userSaving ? 'Saving...' : (editingUserId ? 'Update Staff Member' : 'Create Cashier Account') }}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </transition>
 
       <!-- Toast Feedback Popup -->
       <transition name="fade">
@@ -382,6 +717,7 @@
 <script>
 import AppLayout from '@/components/layout/AppLayout.vue';
 import escpos from '@/services/escpos';
+import { setStoreCurrency } from '@/utils/currency';
 import '@/assets/cards.css';
 
 export default {
@@ -391,10 +727,13 @@ export default {
   },
   data() {
     return {
+      activeTab: 'receipts',
       receiptSaving: false,
       paperWidth: '80',
-      taxRate: 7.0,
-      currencySymbol: '$',
+      taxRate: 16.0,
+      currencyCode: 'PKR',
+      currencySymbol: 'Rs.',
+      currencyPreset: 'PKR',
       printerStatus: escpos.getPrinterStatus(),
       receiptSettings: {
         business_name: 'PeakPOS Retail & Pharmacy',
@@ -407,10 +746,23 @@ export default {
         date: new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         items: [
-          { name: 'Amoxicillin 500mg Caps', qty: 2, price: 12.50 },
-          { name: 'Organic Mineral Water 1L', qty: 1, price: 2.75 },
-          { name: 'Vitamin C 1000mg Tabs', qty: 1, price: 8.90 }
+          { name: 'Amoxicillin 500mg Caps', qty: 2, price: 1250.00 },
+          { name: 'Organic Mineral Water 1L', qty: 1, price: 150.00 },
+          { name: 'Vitamin C 1000mg Tabs', qty: 1, price: 680.00 }
         ]
+      },
+      // Staff / Cashier Management State
+      usersList: [],
+      userSearchQuery: '',
+      showUserModal: false,
+      userSaving: false,
+      editingUserId: null,
+      userForm: {
+        username: '',
+        email: '',
+        password: '',
+        role: 'cashier',
+        pin_code: ''
       },
       toast: {
         show: false,
@@ -428,6 +780,24 @@ export default {
     },
     mockTotal() {
       return this.mockSubtotal + this.mockTax;
+    },
+    filteredUsersList() {
+      const q = (this.userSearchQuery || '').trim().toLowerCase();
+      if (!q) return this.usersList;
+      return this.usersList.filter(u =>
+        (u.username && u.username.toLowerCase().includes(q)) ||
+        (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.role && u.role.toLowerCase().includes(q))
+      );
+    },
+    activeCashiersCount() {
+      return this.usersList.filter(u => u.role === 'cashier' && u.is_active).length;
+    },
+    adminsCount() {
+      return this.usersList.filter(u => ['admin', 'super_admin', 'manager'].includes(u.role)).length;
+    },
+    pinReadyCount() {
+      return this.usersList.filter(u => u.has_pin).length;
     }
   },
   created() {
@@ -438,8 +808,245 @@ export default {
   },
   mounted() {
     this.fetchReceiptSettings();
+    this.fetchTenantSettings();
+    this.fetchUsers();
   },
   methods: {
+    onCurrencyPresetChange() {
+      const presets = {
+        PKR: { code: 'PKR', symbol: 'Rs.', tax: 16.0 },
+        USD: { code: 'USD', symbol: '$', tax: 7.0 },
+        AED: { code: 'AED', symbol: 'AED', tax: 5.0 },
+        GBP: { code: 'GBP', symbol: '£', tax: 20.0 },
+        EUR: { code: 'EUR', symbol: '€', tax: 19.0 },
+        SAR: { code: 'SAR', symbol: 'SAR', tax: 15.0 },
+        CAD: { code: 'CAD', symbol: 'CA$', tax: 13.0 },
+        AUD: { code: 'AUD', symbol: 'A$', tax: 10.0 }
+      };
+      if (presets[this.currencyPreset]) {
+        this.currencyCode = presets[this.currencyPreset].code;
+        this.currencySymbol = presets[this.currencyPreset].symbol;
+        this.taxRate = presets[this.currencyPreset].tax;
+      }
+    },
+
+    async fetchTenantSettings() {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://127.0.0.1:5000/api/tenant/settings', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.currency) this.currencyCode = data.currency;
+          if (data.currency_symbol) this.currencySymbol = data.currency_symbol;
+          if (data.tax_rate !== undefined && data.tax_rate !== null) this.taxRate = data.tax_rate;
+          if (data.name && !this.receiptSettings.business_name) {
+            this.receiptSettings.business_name = data.name;
+          }
+          if (['PKR', 'USD', 'AED', 'GBP', 'EUR', 'SAR', 'CAD', 'AUD'].includes(this.currencyCode)) {
+            this.currencyPreset = this.currencyCode;
+          } else {
+            this.currencyPreset = 'custom';
+          }
+          setStoreCurrency(this.currencyCode, this.currencySymbol);
+        }
+      } catch (err) {
+        console.warn('Could not load tenant settings:', err);
+      }
+    },
+
+    async fetchUsers() {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://127.0.0.1:5000/api/users', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          this.usersList = data.users || [];
+          // Sync cashiers to terminal quick switch
+          const terminalCashiers = this.usersList.map(u => ({
+            id: u.id,
+            name: u.username,
+            role: u.role,
+            pin: u.pin_code || '1234'
+          }));
+          localStorage.setItem('peakpos_cashiers', JSON.stringify(terminalCashiers));
+        }
+      } catch (err) {
+        console.warn('Could not load users list:', err);
+      }
+    },
+
+    openAddUserModal() {
+      this.editingUserId = null;
+      this.userForm = {
+        username: '',
+        email: '',
+        password: '',
+        role: 'cashier',
+        pin_code: ''
+      };
+      this.showUserModal = true;
+    },
+
+    openEditUserModal(user) {
+      this.editingUserId = user.id;
+      this.userForm = {
+        username: user.username,
+        email: user.email,
+        password: '',
+        role: user.role,
+        pin_code: user.pin_code || ''
+      };
+      this.showUserModal = true;
+    },
+
+    async saveUser() {
+      this.userSaving = true;
+      try {
+        const token = localStorage.getItem('token');
+        const isEdit = !!this.editingUserId;
+        const url = isEdit ? `http://127.0.0.1:5000/api/users/${this.editingUserId}` : 'http://127.0.0.1:5000/api/users';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        const payload = {
+          username: this.userForm.username,
+          email: this.userForm.email,
+          role: this.userForm.role,
+          pin_code: this.userForm.pin_code
+        };
+        if (this.userForm.password) {
+          payload.password = this.userForm.password;
+        }
+
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          this.showToast(data.message || 'Staff member saved successfully!', 'success');
+          this.showUserModal = false;
+          await this.fetchUsers();
+        } else {
+          this.showToast(data.error || 'Failed to save staff member', 'error');
+        }
+      } catch (err) {
+        console.error('Error saving user:', err);
+        this.showToast('Network error while saving user', 'error');
+      } finally {
+        this.userSaving = false;
+      }
+    },
+
+    async toggleUserActive(user) {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`http://127.0.0.1:5000/api/users/${user.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ is_active: !user.is_active })
+        });
+        if (res.ok) {
+          user.is_active = !user.is_active;
+          this.showToast(`User status updated to ${user.is_active ? 'Active' : 'Disabled'}`, 'success');
+        } else {
+          const err = await res.json();
+          this.showToast(err.error || 'Could not update user status', 'error');
+        }
+      } catch (err) {
+        this.showToast('Network error updating status', 'error');
+      }
+    },
+
+    async confirmDeleteUser(user) {
+      if (!confirm(`Are you sure you want to remove staff member "${user.username}"?`)) {
+        return;
+      }
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`http://127.0.0.1:5000/api/users/${user.id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          this.showToast(data.message || 'Staff member removed', 'success');
+          await this.fetchUsers();
+        } else {
+          this.showToast(data.error || 'Could not remove staff member', 'error');
+        }
+      } catch (err) {
+        this.showToast('Network error removing user', 'error');
+      }
+    },
+
+    getInitials(name) {
+      if (!name) return 'ST';
+      const parts = name.trim().split(' ');
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return name.substring(0, 2).toUpperCase();
+    },
+
+    getRoleIcon(role) {
+      if (role === 'admin' || role === 'super_admin') return 'admin_panel_settings';
+      if (role === 'manager') return 'supervisor_account';
+      return 'point_of_sale';
+    },
+
+    async saveAllStoreSettings() {
+      this.receiptSaving = true;
+      try {
+        const token = localStorage.getItem('token');
+        // 1. Save receipt settings
+        await fetch('http://127.0.0.1:5000/api/receipt-settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(this.receiptSettings)
+        });
+
+        // 2. Save tenant currency & tax settings
+        const tenantRes = await fetch('http://127.0.0.1:5000/api/tenant/settings', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            currency: this.currencyCode,
+            currency_symbol: this.currencySymbol,
+            tax_rate: this.taxRate,
+            name: this.receiptSettings.business_name
+          })
+        });
+
+        if (tenantRes.ok) {
+          setStoreCurrency(this.currencyCode, this.currencySymbol);
+          localStorage.setItem('tax_rate', this.taxRate);
+          this.showToast('Store settings, currency & receipt layout saved!', 'success');
+        } else {
+          this.showToast('Saved receipt settings, but failed to update currency', 'warning');
+        }
+      } catch (err) {
+        console.error('Error saving store settings:', err);
+        this.showToast('Network error while saving settings', 'error');
+      } finally {
+        this.receiptSaving = false;
+      }
+    },
     async fetchReceiptSettings() {
       try {
         const response = await fetch('http://127.0.0.1:5000/api/receipt-settings');
@@ -1289,6 +1896,449 @@ export default {
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
+}
+
+/* Navigation Tabs */
+.settings-nav-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.settings-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-tab-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.settings-tab-btn.active {
+  background: #4f46e5;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.tab-badge-count {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.settings-tab-btn:not(.active) .tab-badge-count {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+/* Staff & Cashier Studio */
+.staff-studio-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.staff-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.staff-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  border-bottom: 1px solid #e2e8f0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.staff-header-left h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.staff-header-left p {
+  margin: 4px 0 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.staff-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.staff-search-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.staff-search-input i {
+  position: absolute;
+  left: 10px;
+  font-size: 1.15rem;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.staff-search-input input {
+  height: 38px;
+  padding: 0 12px 0 34px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #0f172a;
+  outline: none;
+  width: 240px;
+}
+
+.staff-search-input input:focus {
+  border-color: #4f46e5;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.btn-add-cashier {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s;
+}
+
+.btn-add-cashier:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+}
+
+/* Staff Table */
+.staff-table-wrap {
+  overflow-x: auto;
+}
+
+.staff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.staff-table th {
+  padding: 12px 20px;
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.staff-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.staff-table tr:hover {
+  background: #f8fafc;
+}
+
+.user-avatar-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: #ffffff;
+  background: #64748b;
+}
+
+.user-avatar-circle.admin, .user-avatar-circle.super_admin {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+}
+
+.user-avatar-circle.manager {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.user-avatar-circle.cashier {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.user-cell-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-cell-meta strong {
+  color: #0f172a;
+}
+
+.user-cell-meta small {
+  color: #94a3b8;
+  font-size: 0.72rem;
+}
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.role-badge i { font-size: 0.95rem; }
+.role-badge.cashier { background: #ecfdf5; color: #059669; }
+.role-badge.manager { background: #fffbeb; color: #d97706; }
+.role-badge.admin, .role-badge.super_admin { background: #eef2ff; color: #4f46e5; }
+
+.pin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.pin-badge.has-pin {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.pin-badge i { font-size: 0.9rem; }
+
+.btn-status-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.btn-status-toggle.active {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #059669;
+}
+
+.btn-status-toggle .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+
+.btn-status-toggle.active .status-dot {
+  background: #10b981;
+}
+
+.btn-action-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  transition: all 0.2s;
+}
+
+.btn-action-icon:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.btn-action-icon.delete:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #ef4444;
+}
+
+/* User Dialog Modal */
+.user-dialog {
+  background: #ffffff;
+  border-radius: 18px;
+  width: 540px;
+  max-width: 95vw;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.4);
+  overflow: hidden;
+}
+
+.user-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.user-title-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.user-header-icon-ring {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.user-header-icon-ring i { font-size: 1.5rem; }
+.user-title-box h3 { margin: 0; font-size: 1.15rem; font-weight: 800; color: #0f172a; }
+.user-title-box p { margin: 2px 0 0 0; font-size: 0.74rem; color: #64748b; }
+
+.user-modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.req { color: #ef4444; font-weight: 700; }
+
+.pin-config-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.pin-config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.pin-preview-pills {
+  display: flex;
+  gap: 6px;
+}
+
+.mini-pin-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: all 0.2s;
+}
+
+.mini-pin-dot.filled {
+  background: #10b981;
+  transform: scale(1.15);
+}
+
+.pin-input {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 4px;
+  text-align: center;
+  max-width: 160px;
+  margin: 0 auto;
+}
+
+.user-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-cancel {
+  padding: 9px 18px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+}
+
+.btn-save-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  background: #059669;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.btn-save-user:disabled {
+  opacity: 0.6;
 }
 
 /* Print Styles */

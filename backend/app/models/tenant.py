@@ -10,6 +10,7 @@ class Tenant(db.Model):
     slug = db.Column(db.String(80), unique=True, nullable=False, index=True)
     business_type = db.Column(db.String(50), default="retail")  # retail, pharmacy, grocery, boutique, etc.
     currency = db.Column(db.String(10), default="USD")
+    currency_symbol = db.Column(db.String(10), default="$")
     tax_rate = db.Column(db.Float, default=7.0)
     plan = db.Column(db.String(30), default="starter")          # starter, professional, enterprise
     status = db.Column(db.String(20), default="active")         # active, trial, suspended
@@ -29,6 +30,7 @@ class Tenant(db.Model):
             "slug": self.slug,
             "business_type": self.business_type,
             "currency": self.currency,
+            "currency_symbol": self.currency_symbol or "$",
             "tax_rate": self.tax_rate,
             "plan": self.plan,
             "status": self.status,
