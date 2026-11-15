@@ -27,6 +27,11 @@ const login = async () => {
 
     localStorage.setItem("token", response.token); // Ensure the token is stored
     localStorage.setItem("isAuthenticated", "true"); // Store authentication state
+    localStorage.setItem("role", response.role || "cashier");
+    localStorage.setItem("username", response.username || "");
+    if (response.tenant) {
+      localStorage.setItem("tenant", JSON.stringify(response.tenant));
+    }
 
     // Store email in localStorage if "remember me" is checked
     if (rememberMe.value) {
@@ -35,9 +40,14 @@ const login = async () => {
       localStorage.removeItem("rememberedEmail");
     }
 
-    // Delay navigation to show success animation
+    // Role-based initial landing
     setTimeout(() => {
-      router.push("/dashboard"); // Redirect after login
+      const userRole = (response.role || "cashier").toLowerCase();
+      if (userRole === "cashier") {
+        router.push("/sales"); // Cashiers land directly on High-Speed POS Counter
+      } else {
+        router.push("/dashboard"); // Admins/Managers land on Executive Dashboard
+      }
     }, 1000);
   } catch (error) {
     errorMessage.value = error.message || error.error || "Invalid credentials";
