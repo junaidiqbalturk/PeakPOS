@@ -1,179 +1,17 @@
 <template>
-  <div class="dashboard-app" :class="{ 'dark-mode': isDarkMode }">
-    <!-- Left Navigation Sidebar with responsive behavior -->
-    <aside class="sidebar" :class="{
-        'collapsed': isSidebarCollapsed,
-        'mobile-open': !isSidebarCollapsed && isMobileView
-      }">
-      <div class="sidebar-header">
-        <div class="brand">
-          <div class="logo-container">
-            <span class="logo-icon">
-              <i class="material-icons">point_of_sale</i>
-            </span>
-            <img style="height: 66px;" src="../assets/logo-pp.png">
-          </div>
+  <AppLayout page-title="Discount & Promotions">
+    <div class="discounts-management">
+      <!-- Top Action Toolbar -->
+      <div class="discount-top-bar">
+        <div class="welcome-message">
+          <h2>Discounts & Promotional Offers</h2>
+          <p>Create and manage percentage discounts, fixed-amount coupons, and promotional rules for checkout.</p>
         </div>
-        <button class="toggle-btn" @click="toggleSidebar" aria-label="Toggle sidebar">
-          <i class="material-icons">{{ isSidebarCollapsed ? 'menu_open' : 'menu' }}</i>
+        <button @click="showAddForm = true" class="btn-add-primary">
+          <i class="material-icons">add_circle</i>
+          <span>New Discount</span>
         </button>
       </div>
-
-      <div class="sidebar-content">
-        <nav class="nav-menu">
-          <router-link to="/" class="nav-item">
-            <i class="material-icons">dashboard</i>
-            <span class="nav-label">Dashboard</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Dashboard</div>
-          </router-link>
-          <router-link to="/sales" class="nav-item">
-            <i class="material-icons">shopping_cart</i>
-            <span class="nav-label">Sales</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Sales</div>
-          </router-link>
-          <router-link to="/inventory" class="nav-item">
-            <i class="material-icons">inventory</i>
-            <span class="nav-label">Inventory</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Inventory</div>
-          </router-link>
-          <router-link to="/products" class="nav-item">
-            <i class="material-icons">category</i>
-            <span class="nav-label">Products</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Products</div>
-          </router-link>
-          <router-link to="/discounts" class="nav-item active">
-            <i class="material-icons">local_offer</i>
-            <span class="nav-label">Discounts</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Discounts</div>
-          </router-link>
-          <router-link to="/customers" class="nav-item">
-            <i class="material-icons">people</i>
-            <span class="nav-label">Customers</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Customers</div>
-          </router-link>
-          <router-link to="/reports" class="nav-item">
-            <i class="material-icons">bar_chart</i>
-            <span class="nav-label">Reports</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Reports</div>
-          </router-link>
-          <router-link to="/settings" class="nav-item">
-            <i class="material-icons">settings</i>
-            <span class="nav-label">Settings</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Settings</div>
-          </router-link>
-        </nav>
-      </div>
-
-      <div class="sidebar-footer">
-        <div class="user-profile" @click="toggleUserMenu">
-          <div class="avatar-wrapper">
-            <div class="avatar">
-              <span>JS</span>
-              <span class="status-indicator online"></span>
-            </div>
-          </div>
-          <div class="user-info">
-            <span class="user-name">John Smith</span>
-            <span class="user-role">Admin</span>
-          </div>
-          <div class="user-menu-toggle">
-            <i class="material-icons">expand_more</i>
-          </div>
-          <div class="tooltip" v-if="isSidebarCollapsed">John Smith</div>
-        </div>
-
-        <div class="user-dropdown" v-if="isUserMenuOpen">
-          <div class="dropdown-item">
-            <i class="material-icons">person</i>
-            <span>My Profile</span>
-          </div>
-          <div class="dropdown-item">
-            <i class="material-icons">settings</i>
-            <span>Account Settings</span>
-          </div>
-          <div class="dropdown-item" @click="toggleDarkMode">
-            <i class="material-icons">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</i>
-            <span>{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
-          </div>
-          <div class="dropdown-divider"></div>
-          <div class="dropdown-item logout">
-            <i class="material-icons">logout</i>
-            <span>Sign Out</span>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Overlay for mobile sidebar -->
-    <div class="sidebar-overlay" v-if="!isSidebarCollapsed && isMobileView" @click="toggleSidebar"></div>
-
-    <!-- Main Content Area with responsive design -->
-    <main class="main-content" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
-      <header class="top-header">
-        <div class="header-left">
-          <button class="mobile-toggle" @click="toggleSidebar">
-            <i class="material-icons">menu</i>
-          </button>
-
-          <div class="page-info">
-            <h1 class="page-title">Discount Management</h1>
-            <div class="breadcrumb">
-              <span>PeakPOS</span>
-              <i class="material-icons">chevron_right</i>
-              <span class="current">Discounts</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="header-middle">
-          <div class="search-container">
-            <i class="material-icons">search</i>
-            <input type="text" v-model="searchQuery" placeholder="Search discounts..." class="search-input" />
-          </div>
-        </div>
-
-        <div class="header-right">
-          <div class="date-display">
-            <i class="material-icons">calendar_today</i>
-            <span>{{ currentDate }}</span>
-          </div>
-
-          <div class="action-buttons">
-            <button class="action-btn theme-btn" @click="toggleDarkMode">
-              <i class="material-icons">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</i>
-            </button>
-
-            <button class="action-btn">
-              <i class="material-icons">notifications</i>
-            </button>
-
-            <button class="action-btn">
-              <i class="material-icons">help_outline</i>
-            </button>
-
-            <button @click="showAddForm = true" class="btn-add header-btn">
-              <i class="material-icons">add</i> <span>New Discount</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div class="discounts-management">
-        <!-- Dashboard Summary -->
-        <div class="dashboard-summary">
-          <div class="welcome-message">
-            <h2>Discount Management</h2>
-            <p>Create and manage special offers and discounts for your customers.</p>
-          </div>
-        </div>
 
         <!-- Modern Metrics Grid with Animated 3D Cards -->
         <div class="metrics-grid">
@@ -563,13 +401,18 @@
           </div>
         </transition>
       </div>
-    </main>
-  </div>
+  </AppLayout>
 </template>
 
 <script>
+import AppLayout from '@/components/layout/AppLayout.vue';
+import '@/assets/cards.css';
+
 export default {
   name: 'DiscountManagement',
+  components: {
+    AppLayout
+  },
   data() {
     return {
       // Navigation and layout data
@@ -978,6 +821,61 @@ export default {
 </script>
 
 <style scoped>
+.discount-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: #ffffff;
+  padding: 18px 24px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  margin-bottom: 24px;
+}
+
+.dark-theme .discount-top-bar {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.discount-top-bar .welcome-message h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dark-theme .discount-top-bar .welcome-message h2 {
+  color: #f8fafc;
+}
+
+.discount-top-bar .welcome-message p {
+  margin: 4px 0 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.btn-add-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+  color: white;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3);
+  transition: transform 0.15s;
+}
+
+.btn-add-primary:hover {
+  transform: translateY(-1px);
+}
 /* Main Layout Styles */
 .dashboard-app {
   display: flex;

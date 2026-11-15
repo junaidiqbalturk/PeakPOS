@@ -1,168 +1,45 @@
 <template>
-  <div class="dashboard-app" :class="{ 'dark-mode': isDarkMode }">
-    <!-- Sidebar - Left Navigation -->
-    <div class="sidebar" :class="{ 'collapsed': isSidebarCollapsed, 'mobile-open': !isSidebarCollapsed && isMobileView }">
-      <div class="sidebar-header">
-        <div class="brand">
-          <div class="logo-container">
-            <div class="logo-icon">
-              <i class="material-icons">storefront</i>
-            </div>
-            <div class="logo">Peak<span>POS</span></div>
+  <AppLayout page-title="Executive Dashboard">
+    <div class="dashboard-content">
+      <!-- Quick Action Operations Bar -->
+      <div class="dashboard-quick-bar">
+        <router-link to="/sales" class="dash-action-btn primary">
+          <i class="material-icons">flash_on</i>
+          <div>
+            <strong>Launch POS Register</strong>
+            <small>High-Speed Counter [F9]</small>
           </div>
-        </div>
-        <button class="toggle-btn" @click="toggleSidebar">
-          <i class="material-icons">{{ isSidebarCollapsed ? 'menu_open' : 'menu' }}</i>
-        </button>
-      </div>
-      <div class="sidebar-content">
-        <nav class="nav-menu">
-          <router-link to="/enhanced-dashboard" class="nav-item active">
-            <div class="nav-indicator"></div>
-            <i class="material-icons">dashboard</i>
-            <span class="nav-label">Dashboard</span>
-            <span class="tooltip" v-if="isSidebarCollapsed">Dashboard</span>
-          </router-link>
-
-          <router-link to="/sales" class="nav-item">
-            <div class="nav-indicator"></div>
-            <i class="material-icons">point_of_sale</i>
-            <span class="nav-label">Sales</span>
-            <span class="tooltip" v-if="isSidebarCollapsed">Sales</span>
-          </router-link>
-
-          <router-link to="/admin/categories" class="nav-item">
-            <div class="nav-indicator"></div>
-            <i class="material-icons">category</i>
-            <span class="nav-label">Category Management</span>
-            <span class="tooltip" v-if="isSidebarCollapsed">Inventory</span>
-          </router-link>
-          <router-link to="/admin/products" class="nav-item">
-            <div class="nav-indicator"></div>
-            <i class="material-icons">inventory</i>
-            <span class="nav-label">Products Managements</span>
-            <span class="tooltip" v-if="isSidebarCollapsed">Inventory</span>
-          </router-link>
-
-          <router-link to="/customers" class="nav-item">
-            <div class="nav-indicator"></div>
-            <i class="material-icons">people</i>
-            <span class="nav-label">Customers</span>
-            <span class="tooltip" v-if="isSidebarCollapsed">Customers</span>
-          </router-link>
-
-          <router-link to="/reports" class="nav-item">
-            <div class="nav-indicator"></div>
-            <i class="material-icons">bar_chart</i>
-            <span class="nav-label">Reports</span>
-            <span class="tooltip" v-if="isSidebarCollapsed">Reports</span>
-          </router-link>
-
-          <router-link to="admin/settings" class="nav-item">
-            <div class="nav-indicator"></div>
-            <i class="material-icons">settings</i>
-            <span class="nav-label">Settings</span>
-            <span class="tooltip" v-if="isSidebarCollapsed">Settings</span>
-          </router-link>
-        </nav>
-      </div>
-      <div class="sidebar-footer">
-        <div class="user-profile" @click="isUserMenuOpen = !isUserMenuOpen">
-          <div class="avatar-wrapper">
-            <div class="avatar">AD</div>
-            <div class="status-indicator online"></div>
+        </router-link>
+        <router-link to="/admin/products" class="dash-action-btn">
+          <i class="material-icons">add_box</i>
+          <div>
+            <strong>New Product</strong>
+            <small>Add to Catalog</small>
           </div>
-          <div class="user-info">
-            <div class="user-name">{{ currentUser.name }}</div>
-            <div class="user-role">Administrator</div>
+        </router-link>
+        <router-link to="/reports" class="dash-action-btn">
+          <i class="material-icons">insights</i>
+          <div>
+            <strong>Sales Analytics</strong>
+            <small>View & Export CSV</small>
           </div>
-          <div class="user-menu-toggle">
-            <i class="material-icons">{{ isUserMenuOpen ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</i>
+        </router-link>
+        <router-link to="/customers" class="dash-action-btn">
+          <i class="material-icons">account_balance_wallet</i>
+          <div>
+            <strong>Customer Ledger</strong>
+            <small>Settle Receivables</small>
           </div>
-          <span class="tooltip" v-if="isSidebarCollapsed">User Profile</span>
-        </div>
-
-        <!-- User Dropdown Menu -->
-        <div class="user-dropdown" v-if="isUserMenuOpen">
-          <div class="dropdown-item">
-            <i class="material-icons">person</i>
-            <span>My Profile</span>
-          </div>
-          <div class="dropdown-item">
-            <i class="material-icons">settings</i>
-            <span>Account Settings</span>
-          </div>
-          <div class="dropdown-divider"></div>
-          <div class="dropdown-item logout" @click="logout">
-            <i class="material-icons">logout</i>
-            <span>Logout</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main Content Area -->
-    <div class="main-content" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
-      <!-- Top Header -->
-      <div class="top-header" :class="{ 'header-shadow': scrolled }">
-        <div class="header-left">
-          <button class="mobile-toggle" @click="toggleSidebar">
-            <i class="material-icons">menu</i>
-          </button>
-          <div class="page-info">
-            <h1 class="page-title">Dashboard</h1>
-            <div class="breadcrumb">
-              <span>Home</span>
-              <i class="material-icons">navigate_next</i>
-              <span class="current">Dashboard</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="header-middle">
-          <div class="search-container">
-            <i class="material-icons">search</i>
-            <input type="text" class="search-input" placeholder="Search...">
-            <div class="search-shortcut">/</div>
-          </div>
-        </div>
-
-        <div class="header-right">
-          <div class="date-display">
-            <i class="material-icons">today</i>
-            <span>{{ currentDate }}</span>
-          </div>
-
-          <div class="action-buttons">
-            <button class="action-btn theme-btn" @click="isDarkMode = !isDarkMode">
-              <i class="material-icons">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</i>
-            </button>
-
-            <button class="action-btn notification-btn" :class="{ 'has-notifications': hasNotifications }">
-              <i class="material-icons">notifications</i>
-              <span class="badge" v-if="notificationCount">{{ notificationCount }}</span>
-            </button>
-
-            <button class="action-btn help-btn">
-              <i class="material-icons">help_outline</i>
-            </button>
-          </div>
-
-          <div class="mobile-avatar" @click="isUserMenuOpen = !isUserMenuOpen">
-            <div class="avatar small">AD</div>
-          </div>
-        </div>
+        </router-link>
       </div>
 
-      <!-- Dashboard Content -->
-      <div class="dashboard-content">
-        <!-- Dashboard Summary -->
-        <div class="dashboard-summary">
-          <div class="welcome-message">
-            <h2>Welcome back, {{ currentUser.name }}!</h2>
-            <p>Here's what's happening with your business today.</p>
-          </div>
-          <div class="date-range-picker">
+      <!-- Dashboard Summary -->
+      <div class="dashboard-summary">
+        <div class="welcome-message">
+          <h2>Welcome back, {{ currentUser.name }}!</h2>
+          <p>Here's what's happening with your business today.</p>
+        </div>
+        <div class="date-range-picker">
             <div class="date-range-inputs">
               <div class="date-field">
                 <label for="start-date">From:</label>
@@ -474,15 +351,19 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
+  </AppLayout>
 </template>
 
 <script>
 import Chart from 'chart.js/auto';
 import axios from 'axios';
+import AppLayout from '@/components/layout/AppLayout.vue';
 
 export default {
+  name: 'DashboardView',
+  components: {
+    AppLayout
+  },
   data() {
     return {
       //Toast
@@ -1315,6 +1196,68 @@ this.recentOrders = ordersRes.data.slice(0, 5).map(order => {
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+/* Dashboard Quick Operations Bar */
+.dashboard-quick-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.dash-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #ffffff;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  text-decoration: none;
+  color: #1e293b;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark-theme .dash-action-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.dash-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  border-color: #cbd5e1;
+}
+
+.dash-action-btn i {
+  font-size: 24px;
+  color: #6366f1;
+}
+
+.dash-action-btn.primary {
+  background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 14px rgba(67, 56, 202, 0.35);
+}
+
+.dash-action-btn.primary i {
+  color: #ffffff;
+}
+
+.dash-action-btn strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.dash-action-btn small {
+  display: block;
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
 
 /* Root Variables - Light Theme */
 :root {

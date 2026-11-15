@@ -1,180 +1,17 @@
 <template>
-  <div class="dashboard-app" :class="{ 'dark-mode': isDarkMode }">
-    <!-- Improved Left Navigation Sidebar with better responsive behavior -->
-    <aside class="sidebar" :class="{
-        'collapsed': isSidebarCollapsed,
-        'mobile-open': !isSidebarCollapsed && isMobileView
-      }">
-      <div class="sidebar-header">
-        <div class="brand">
-          <div class="logo-container">
-            <span class="logo-icon">
-              <i class="material-icons">point_of_sale</i>
-            </span>
-            <img style="height: 66px;" src="../assets/logo-pp.png"><!--<h1 class="logo">Peak<span>POS</span></h1>-->
-          </div>
+  <AppLayout page-title="Product Catalog">
+    <div class="products-management">
+      <!-- Top Action Toolbar -->
+      <div class="product-top-bar">
+        <div class="welcome-message">
+          <h2>Product Catalog & Stock Control</h2>
+          <p>Manage product pricing, SKU barcodes, inventory stock levels, and category assignments.</p>
         </div>
-        <button class="toggle-btn" @click="toggleSidebar" aria-label="Toggle sidebar">
-          <i class="material-icons">{{ isSidebarCollapsed ? 'menu_open' : 'menu' }}</i>
+        <button @click="showAddForm = true" class="btn-add-primary">
+          <i class="material-icons">add_box</i>
+          <span>New Product</span>
         </button>
       </div>
-
-      <div class="sidebar-content">
-        <!-- Mobile-specific Add Product button that only shows on mobile -->
-        <div class="mobile-add-button" @click="showAddForm = true">
-          <i class="material-icons">add_circle</i>
-          <span>New Product</span>
-        </div>
-
-        <nav class="nav-menu">
-          <router-link to="/dashboard" class="nav-item">
-            <i class="material-icons">dashboard</i>
-            <span class="nav-label">Dashboard</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Dashboard</div>
-          </router-link>
-          <router-link to="/sales" class="nav-item">
-            <i class="material-icons">shopping_cart</i>
-            <span class="nav-label">Sales</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Sales</div>
-          </router-link>
-          <router-link to="/admin/categories" class="nav-item">
-            <i class="material-icons">category</i>
-            <span class="nav-label">Category Management</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Inventory</div>
-          </router-link>
-          <router-link to="/products" class="nav-item active">
-            <i class="material-icons">inventory</i>
-            <span class="nav-label">Products</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Products</div>
-          </router-link>
-          <router-link to="/customers" class="nav-item">
-            <i class="material-icons">people</i>
-            <span class="nav-label">Customers</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Customers</div>
-          </router-link>
-          <router-link to="/reports" class="nav-item">
-            <i class="material-icons">bar_chart</i>
-            <span class="nav-label">Reports</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Reports</div>
-          </router-link>
-          <router-link to="/settings" class="nav-item">
-            <i class="material-icons">settings</i>
-            <span class="nav-label">Settings</span>
-            <span class="nav-indicator"></span>
-            <div class="tooltip" v-if="isSidebarCollapsed">Settings</div>
-          </router-link>
-        </nav>
-      </div>
-
-      <div class="sidebar-footer">
-        <div class="user-profile" @click="toggleUserMenu">
-          <div class="avatar-wrapper">
-            <div class="avatar">
-              <span>JS</span>
-              <span class="status-indicator online"></span>
-            </div>
-          </div>
-          <div class="user-info">
-            <span class="user-name">John Smith</span>
-            <span class="user-role">Admin</span>
-          </div>
-          <div class="user-menu-toggle">
-            <i class="material-icons">expand_more</i>
-          </div>
-          <div class="tooltip" v-if="isSidebarCollapsed">John Smith</div>
-        </div>
-
-        <div class="user-dropdown" v-if="isUserMenuOpen">
-          <div class="dropdown-item">
-            <i class="material-icons">person</i>
-            <span>My Profile</span>
-          </div>
-          <div class="dropdown-item">
-            <i class="material-icons">settings</i>
-            <span>Account Settings</span>
-          </div>
-          <div class="dropdown-item" @click="toggleDarkMode">
-            <i class="material-icons">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</i>
-            <span>{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
-          </div>
-          <div class="dropdown-divider"></div>
-          <div class="dropdown-item logout">
-            <i class="material-icons">logout</i>
-            <span>Sign Out</span>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Overlay for mobile sidebar -->
-    <div class="sidebar-overlay" v-if="!isSidebarCollapsed && isMobileView" @click="toggleSidebar"></div>
-
-    <!-- Main Content Area with improved responsive design -->
-    <main class="main-content" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
-      <header class="top-header">
-        <div class="header-left">
-          <button class="mobile-toggle" @click="toggleSidebar">
-            <i class="material-icons">menu</i>
-          </button>
-
-          <div class="page-info">
-            <h1 class="page-title">Product Management</h1>
-            <div class="breadcrumb">
-              <span>PeakPOS</span>
-              <i class="material-icons">chevron_right</i>
-              <span class="current">Products</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="header-middle">
-          <div class="search-container">
-            <i class="material-icons">search</i>
-            <input type="text" v-model="searchQuery" placeholder="Search products..." class="search-input" />
-          </div>
-        </div>
-
-        <div class="header-right">
-          <div class="date-display">
-            <i class="material-icons">calendar_today</i>
-            <span>{{ currentDate }}</span>
-          </div>
-
-          <div class="action-buttons">
-            <button class="action-btn theme-btn" @click="toggleDarkMode">
-              <i class="material-icons">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</i>
-            </button>
-
-            <button class="action-btn">
-              <i class="material-icons">notifications</i>
-            </button>
-
-            <button class="action-btn">
-              <i class="material-icons">help_outline</i>
-            </button>
-
-            <button @click="showAddForm = true" class="btn-add header-btn">
-              <i class="material-icons">add</i> <span>New Product</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div class="products-management">
-
-    <!-- Dashboard Summary -->
-    <div class="dashboard-summary">
-      <div class="welcome-message">
-        <h2>Product Management</h2>
-        <p>Manage your products, update stock, and organize categories.</p>
-      </div>
-    </div>
 
     <!-- Modern Metrics Grid with Animated 3D Cards -->
     <div class="metrics-grid">
@@ -689,14 +526,19 @@
     <div class="loading-overlay" v-if="isLoading">
       <div class="spinner"></div>
     </div>
-      </div>
-      </main>
     </div>
-  </template>
+  </AppLayout>
+</template>
 
 <script>
+import AppLayout from '@/components/layout/AppLayout.vue';
+import '@/assets/cards.css';
+
 export default {
   name: 'ProductsManagement',
+  components: {
+    AppLayout
+  },
   data() {
     return {
       // Navigation and layout data
@@ -1262,6 +1104,61 @@ getPlaceholderImage() {
 </script>
 
 <style scoped>
+.product-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: #ffffff;
+  padding: 18px 24px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  margin-bottom: 24px;
+}
+
+.dark-theme .product-top-bar {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.product-top-bar .welcome-message h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.dark-theme .product-top-bar .welcome-message h2 {
+  color: #f8fafc;
+}
+
+.product-top-bar .welcome-message p {
+  margin: 4px 0 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.btn-add-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+  color: white;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3);
+  transition: transform 0.15s;
+}
+
+.btn-add-primary:hover {
+  transform: translateY(-1px);
+}
 /* Dashboard Layout Styles */
 
 .dashboard-app {
