@@ -148,9 +148,22 @@
       <!-- Universal Enterprise Header -->
       <header class="peak-header">
         <div class="header-left">
-          <button class="mobile-toggle-btn" @click="isMobileOpen = !isMobileOpen">
-            <i class="material-icons">menu</i>
+          <!-- Universal Header Sidebar Toggle Button (desktop and mobile) -->
+          <button
+            class="header-toggle-sidebar-btn"
+            @click="toggleSidebar"
+            :title="isSidebarCollapsed ? 'Expand Sidebar [Ctrl+B]' : 'Collapse Sidebar [Ctrl+B]'"
+            aria-label="Toggle sidebar"
+          >
+            <i class="material-icons">{{ isSidebarCollapsed ? 'menu' : 'menu_open' }}</i>
           </button>
+
+          <!-- Mini Brand Logo when sidebar is collapsed completely -->
+          <router-link to="/dashboard" class="header-brand-mini" v-if="isSidebarCollapsed">
+            <img src="../../assets/logo-pp.png" alt="PeakPOS" class="header-brand-logo" />
+            <span class="header-brand-name">Peak<span>POS</span></span>
+          </router-link>
+
           <div class="breadcrumb-trail">
             <span class="crumb-root">PeakPOS</span>
             <i class="material-icons crumb-sep">chevron_right</i>
@@ -305,8 +318,12 @@ export default {
       this.liveClock = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     },
     toggleSidebar() {
-      this.isSidebarCollapsed = !this.isSidebarCollapsed;
-      localStorage.setItem('peakpos_sidebar_collapsed', this.isSidebarCollapsed ? 'true' : 'false');
+      if (window.innerWidth <= 900) {
+        this.isMobileOpen = !this.isMobileOpen;
+      } else {
+        this.isSidebarCollapsed = !this.isSidebarCollapsed;
+        localStorage.setItem('peakpos_sidebar_collapsed', this.isSidebarCollapsed ? 'true' : 'false');
+      }
     },
     toggleTheme() {
       this.isDarkMode = !this.isDarkMode;
@@ -443,7 +460,16 @@ export default {
 }
 
 .peak-sidebar.collapsed {
-  width: var(--sidebar-collapsed-w);
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  border-right: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
 }
 
 /* Sidebar Header */
@@ -914,16 +940,69 @@ export default {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
-.mobile-toggle-btn {
-  display: none;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: var(--text-main);
+.header-toggle-sidebar-btn {
+  background: #f8fafc;
+  border: 1px solid var(--border-subtle);
+  color: #64748b;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-toggle-sidebar-btn:hover {
+  background: #f1f5f9;
+  color: #4338ca;
+  border-color: #cbd5e1;
+}
+
+.peak-shell.dark-mode .header-toggle-sidebar-btn {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+.peak-shell.dark-mode .header-toggle-sidebar-btn:hover {
+  background: #334155;
+  color: #818cf8;
+}
+
+.header-brand-mini {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  padding-right: 12px;
+  border-right: 1px solid var(--border-subtle);
+  margin-right: 4px;
+}
+
+.header-brand-logo {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.header-brand-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+}
+
+.header-brand-name span {
+  color: #4338ca;
+}
+
+.peak-shell.dark-mode .header-brand-name span {
+  color: #818cf8;
 }
 
 .breadcrumb-trail {
